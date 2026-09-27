@@ -64,10 +64,31 @@ internal sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.CreateCustomTimeZone("Test", now.Offset, "Test", "Test");
 }
 
+/// <summary>
+/// A clock whose timestamp advances one second on every reading, so that every
+/// rate-limited progress check reports. Wall-clock time is fixed.
+/// </summary>
+internal sealed class SteppingTimeProvider(DateTimeOffset now) : TimeProvider
+{
+    private long _timestamp;
+
+    public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+    public override long GetTimestamp() => _timestamp += TimeSpan.TicksPerSecond;
+
+    public override DateTimeOffset GetUtcNow() => now.ToUniversalTime();
+
+    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.CreateCustomTimeZone("Test", now.Offset, "Test", "Test");
+}
+
 /// <summary>Collects progress reports synchronously (unlike <see cref="Progress{T}"/>).</summary>
-internal sealed class ProgressRecorder<T> : IProgress<T>
+internal sealed class ProgressRecorder<T>(Action<T>? onReport = null) : IProgress<T>
 {
     public List<T> Reports { get; } = [];
 
-    public void Report(T value) => Reports.Add(value);
+    public void Report(T value)
+    {
+        Reports.Add(value);
+        onReport?.Invoke(value);
+    }
 }
