@@ -8,4 +8,11 @@
     <InternalsVisibleTo Include="MissingFiles.Core.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Built-in default (REQ-05b), also shipped next to the executables (NFR-10). -->
+    <EmbeddedResource Include="FileTypes\FileTypes.default.json" LogicalName="MissingFiles.Core.FileTypes.default.json" />
+    <None Include="FileTypes\FileTypes.default.json" Link="FileTypes.default.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
 </Project>

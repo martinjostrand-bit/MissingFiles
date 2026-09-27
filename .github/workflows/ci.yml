@@ -35,6 +35,19 @@ jobs:
       - name: Unit and functional tests
         run: dotnet test -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults --logger trx
 
+      - name: Check line coverage of MissingFiles.Core (>= 80 %)
+        shell: pwsh
+        run: |
+          $rates = Get-ChildItem TestResults -Recurse -Filter coverage.cobertura.xml | ForEach-Object {
+            ([xml](Get-Content $_.FullName)).coverage.packages.package |
+              Where-Object name -eq 'MissingFiles.Core' |
+              ForEach-Object { [double]::Parse($_.'line-rate', [cultureinfo]::InvariantCulture) }
+          }
+          if (-not $rates) { Write-Error 'No coverage data found for MissingFiles.Core'; exit 1 }
+          $rate = ($rates | Measure-Object -Maximum).Maximum
+          Write-Output ('MissingFiles.Core line coverage: {0:P1}' -f $rate)
+          if ($rate -lt 0.80) { Write-Error 'Line coverage of MissingFiles.Core is below 80 %'; exit 1 }
+
       - name: Check for vulnerable NuGet packages
         shell: pwsh
         run: |
@@ -62,4 +75,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: MissingFiles-win-x64
-          path: publish/*.exe
+          path: |
+            publish/*.exe
+            publish/FileTypes.default.json

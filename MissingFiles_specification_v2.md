@@ -135,13 +135,15 @@ The application works with **any file type**. Which types are compared is define
   - Only groups with `"enabled": true` are used. An extension may appear in several groups; it is counted once.
   - The special entry `"*"` means **all files, regardless of extension** (including files without an extension).
   - The entry `""` (empty string) means files **without** an extension.
-  - Unknown properties are ignored (forward compatibility).
+  - Unknown properties are ignored (forward compatibility). Comments (`// ...`) and trailing commas are allowed, since the file is edited by hand.
+  - A group without `"enabled"` counts as enabled.
+  - Invalid extensions are rejected with a message naming the group: wildcards other than a lone `"*"` (e.g. `"*.jpg"`), spaces, path characters, and multi-dot extensions such as `".tar.gz"` (only the part after the last dot is a file's extension).
 - **REQ-05b** The application shall ship with a default file `FileTypes.default.json` (pictures + videos, as above). On first start it is copied to `%APPDATA%\MissingFiles\FileTypes.json`, which the user may edit. The shipped default is never modified.
 - **REQ-05c** The user shall be able to choose another file types file (UI: file picker; CLI: `--types-file`). The UI shall remember the last used file.
 - **REQ-05d** The file types file shall be validated before the scan starts. If it is missing, not valid JSON, or has no enabled extensions, the scan shall not start and a message shall name the file and the problem (with line number for JSON errors).
 - **REQ-06** The UI shall show the groups from the file types file as checkboxes (initial state = `enabled`), with the extensions of each group visible, so the user can switch groups on/off for a single scan without editing the file. The UI shall **not** edit or save the file types file; editing is done in a text editor. The UI shall provide an “Open file types file” button (opens it in the default text editor) and a “Reload” button (re-reads and validates it).
 - **REQ-06a** The scan result file shall record the file types file path and the effective list of extensions used (field `extensions`), so a scan can be reproduced.
-- **REQ-07** Hidden and system files shall be skipped by default. Symbolic links and junctions shall not be followed (prevents loops).
+- **REQ-07** Hidden and system files shall be skipped by default. Folders that are symbolic links or junctions shall not be followed (prevents loops). Files that are reparse points (e.g. OneDrive files) are included.
 
 ### 4.3 Matching
 - **REQ-08** A source file matches if the destination contains at least one file, located in any subfolder, with:

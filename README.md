@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development (WP0 – project skeleton).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file). Next: WP2 (copy).
 
 ## Requirements
 
