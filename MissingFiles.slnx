@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MissingFiles.App/MissingFiles.App.csproj" />
+    <Project Path="src/MissingFiles.Cli/MissingFiles.Cli.csproj" />
+    <Project Path="src/MissingFiles.Core/MissingFiles.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MissingFiles.Core.Tests/MissingFiles.Core.Tests.csproj" />
+    <Project Path="tests/MissingFiles.FunctionalTests/MissingFiles.FunctionalTests.csproj" />
+  </Folder>
+</Solution>

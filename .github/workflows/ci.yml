@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build (warnings as errors, .NET analyzers)
+        run: dotnet build -c Release --no-restore
+
+      - name: Unit and functional tests
+        run: dotnet test -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults --logger trx
+
+      - name: Check for vulnerable NuGet packages
+        shell: pwsh
+        run: |
+          $output = dotnet list package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Output $output
+          if ($output -match 'has the following vulnerable packages') { exit 1 }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Publish single-file executables
+        shell: pwsh
+        run: |
+          $common = @('-c', 'Release', '-r', 'win-x64', '--self-contained', 'true',
+                      '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true',
+                      '-p:EnableCompressionInSingleFile=true', '-p:DebugType=none', '-o', 'publish')
+          dotnet publish src/MissingFiles.App @common
+          dotnet publish src/MissingFiles.Cli @common
+
+      - name: Upload executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: MissingFiles-win-x64
+          path: publish/*.exe

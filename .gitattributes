@@ -1,0 +1,4 @@
+# Windows-only project: CRLF everywhere, also on CI checkouts.
+* text=auto eol=crlf
+*.png binary
+*.ico binary

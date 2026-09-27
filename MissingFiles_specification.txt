@@ -1,0 +1,95 @@
+MissingFiles Project specifcation
+
+1. Introduction
+The objective of this application is to check the source folder for all files of a specific type and cross check that file is existing in the destination folder. The file does not need to be in the same location. The match is based on the naming of the file. 
+The files not found in the destination folder can in a next step be copied to the desination folder.
+
+
+2. Work packages
+To be defined
+
+3. Build environement
+# GitHub Account
+Use the GitHub account `martinjostrand-bit` (email: martin.jo.strand@gmail.com) for
+this project — the same account used for my other repositories. When creating or
+initializing the repository, authenticating `gh`/`git`, or pushing code, use this
+account rather than any other account that might be available on this machine.
+
+- When a change is complete and tested: make a git commit with a short,
+  descriptive message.
+- After each commit: push to GitHub (`git push`) so the code is always backed up.
+
+# Tech Stack
+This is a native Windows application built with C#/.NET (WPF or WinUI — decide
+and note which one once chosen). Before committing:
+- Run `dotnet build` and confirm it succeeds with no errors.
+- Run `dotnet test` if a test project exists, and confirm all tests pass.
+- Make sure `bin/` and `obj/` are excluded via `.gitignore` (standard
+  `dotnet new gitignore` covers this) — never commit build output.
+
+# Target
+The windows application shall run on Windows 11 and Windows 10
+
+# Build pipe-line
+Establish a professional build pipeline that includes steps like:
+* Unit testing
+* Functional testing
+* Static code analysis (e.g. LINT)
+* Cybersecurity tests 
+* UX test
+
+4. Requirement specification
+
+4.1 Define source and destination folder
+The user can in provide the source and destination for the file comparison
+
+4.2 In a first step the files types to compare are limited to common picure and Movie file types
+
+4.3 The user can start the comparison by pressing a "start compare" button
+
+4.4 During the comparison a splash screen is show which includes number of files read from target, number of files with a matching file on destination and time elapsed
+
+4.5 The splash screen shown during the comparison contains a "Cancel" button to abort the compartion
+
+4.6 Files not found in the destination folder is recorded in an output file in JSON format. Enough information should be recorded in the file to identify the file and file location to late be able to copy it. 
+
+4.7 Files are matched only by name and not by the location
+
+4.8 The scanning output file is automatically named "MissingFiles" amended with date and time
+
+4.9 After the scan the there is a result presented including the number of files scanned, number of files matching, number of files missing, time to do the scan and the name of the output file
+
+4.10 Define the output file
+The user can define the output file from a previous scan
+
+4.11 The user can start to copy the missing files as recorded in the output file to the destination folder by pressing a "Start copy" button
+
+4.11 The application reads the providet JSON output file and copies the files from the source as defined by the JSON file to the same relative path of the destination. If the file already exists in the destination the files is not copied
+
+4.12 During the copy of the files the progress is shown on a splash screen. The screen includes number of files copied, time elapsed and files which failed to be copied.
+
+4.13 The process of copying the files are loged in text file. The file start with specification section, a summary section of the result (same as splash screen) and then a detailed log of the files copied.
+
+4.14 There is a command line interface to the application so that the same functions as from the UI can be triggered from a CLI.
+
+
+5. Functional test specification
+
+5.1. Create funcitonal test where test source and destionation folders are created. Populate the folders with dummy files with plausible names and types but limit the size to the files to a minimum.
+
+5.2 The test folders should contain test cases where:
+	a) All files match
+	b) No files match
+	c) Some files are missing in the destination folder
+	d) Some files are duplicate in the target folder
+
+5.3 Functional test for file comparison according to 5.2
+
+5.4 Functional test for file copy according to 5.2
+
+5.5 functional test where file comparison is first done, then file copy is performed and then again a file comparison is done. according to 5.2
+
+
+6. Non funcitonal requirements
+
+6.1 The application shall be designed to be fast and efficient and design should optimize for speed.
