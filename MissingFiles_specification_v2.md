@@ -232,9 +232,9 @@ MissingFiles copy --result <file.json> [--out <folder>] [--dry-run]
 MissingFiles --help | --version
 ```
 
-- **REQ-33a** Without `--types-file`, the CLI uses `%APPDATA%\MissingFiles\FileTypes.json` (or the shipped default if that does not exist). `--groups` overrides which groups are enabled; unknown group names are an error (exit code 3).
+- **REQ-33a** Without `--types-file`, the CLI uses `%APPDATA%\MissingFiles\FileTypes.json` (or the built-in default if that does not exist; the CLI does not create the file). `--groups` overrides which groups are enabled; unknown group names are an error (exit code 3).
 - **REQ-34** The CLI shall print progress and a final summary to stdout, errors to stderr, and support Ctrl+C for cancellation.
-- **REQ-35** Exit codes: `0` success, no missing files / all copied · `1` success, missing files found / some files skipped · `2` completed with file errors · `3` invalid arguments · `4` cancelled · `5` fatal error.
+- **REQ-35** Exit codes: `0` success, no missing files / all copied · `1` success, missing files found / some files skipped · `2` completed with file errors (folders not readable / files not copied) · `3` invalid arguments, or input that prevents starting (missing or overlapping folders, invalid file types or scan result file, not enough free space) · `4` cancelled · `5` fatal error.
 
 ---
 

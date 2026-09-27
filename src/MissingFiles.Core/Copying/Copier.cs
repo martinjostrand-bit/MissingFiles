@@ -245,7 +245,8 @@ public static class Copier
         }
     }
 
-    internal static string FormatBytes(long bytes)
+    /// <summary>Formats a size for people, e.g. "512 bytes", "4.6 MB".</summary>
+    public static string FormatBytes(long bytes)
     {
         string[] units = ["bytes", "KB", "MB", "GB", "TB"];
         double value = bytes;

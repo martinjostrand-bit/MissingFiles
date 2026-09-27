@@ -9,7 +9,33 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log). Next: WP3 (CLI).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line). Next: WP4 (WPF UI).
+
+## Command line
+
+```powershell
+# 1. Find files in D:\CameraBackup that are missing from E:\PhotoArchive
+MissingFiles.Cli scan --source D:\CameraBackup --dest E:\PhotoArchive
+
+# 2. Check what would be copied, then copy
+MissingFiles.Cli copy --result "$env:USERPROFILE\Documents\MissingFiles\MissingFiles_20260927_140312.json" --dry-run
+MissingFiles.Cli copy --result "$env:USERPROFILE\Documents\MissingFiles\MissingFiles_20260927_140312.json"
+```
+
+Result files and copy logs are written to `Documents\MissingFiles` (change with `--out`).
+File types come from `%APPDATA%\MissingFiles\FileTypes.json` if it exists, otherwise the built-in
+pictures + videos list; use `--types-file` and `--groups` to choose others.
+Run `MissingFiles.Cli scan --help` or `MissingFiles.Cli copy --help` for all options.
+Press Ctrl+C to cancel.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | Nothing missing / all files copied |
+| 1 | Missing files found / some files skipped |
+| 2 | Some folders could not be read / some files could not be copied |
+| 3 | Invalid arguments, or input that prevents starting (folders, files, free space) |
+| 4 | Cancelled |
+| 5 | Fatal error |
 
 ## Requirements
 

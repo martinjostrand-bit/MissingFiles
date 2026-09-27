@@ -11,10 +11,13 @@ public enum ExitCode
     /// <summary>Success: missing files found / some files skipped.</summary>
     SuccessWithFindings = 1,
 
-    /// <summary>Completed with file errors.</summary>
+    /// <summary>Completed with file errors: folders that could not be read / files that could not be copied.</summary>
     CompletedWithErrors = 2,
 
-    /// <summary>Invalid arguments.</summary>
+    /// <summary>
+    /// Invalid arguments, or input that prevents starting: missing or overlapping folders,
+    /// an invalid file types or scan result file, not enough free space.
+    /// </summary>
     InvalidArguments = 3,
 
     /// <summary>Cancelled by the user.</summary>
