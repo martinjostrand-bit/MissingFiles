@@ -25,6 +25,7 @@ internal sealed class CommandLine
 
     public bool Has(string flag) => _flags.Contains(flag);
 
+    /// <summary>Parses the arguments that follow the command name.</summary>
     /// <exception cref="CliArgumentException">An option is unknown, duplicated, missing its value, or a required option is missing.</exception>
     public static CommandLine Parse(
         IReadOnlyList<string> args,
