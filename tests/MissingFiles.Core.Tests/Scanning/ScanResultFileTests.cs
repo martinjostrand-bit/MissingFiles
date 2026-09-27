@@ -13,7 +13,7 @@ public sealed class ScanResultFileTests : IDisposable
     [Fact]
     public void FileIsNamedAfterScanStartInLocalTime() // REQ-18
     {
-        var path = ScanResultFile.Save(SampleResult(), Path.Combine(_folder.Root, "out"));
+        var path = ScanResultFile.Save(SampleResult(), Path.Join(_folder.Root, "out"));
 
         Assert.Equal("MissingFiles_20260927_140312.json", Path.GetFileName(path));
         Assert.True(File.Exists(path));
@@ -22,7 +22,7 @@ public sealed class ScanResultFileTests : IDisposable
     [Fact]
     public void ExistingFileIsNeverOverwritten()
     {
-        var folder = Path.Combine(_folder.Root, "out");
+        var folder = Path.Join(_folder.Root, "out");
 
         var first = ScanResultFile.Save(SampleResult(), folder);
         var second = ScanResultFile.Save(SampleResult(), folder);
@@ -85,7 +85,7 @@ public sealed class ScanResultFileTests : IDisposable
     [Fact]
     public void InvalidJsonReportsFileAndLine()
     {
-        var path = Path.Combine(_folder.Root, "broken.json");
+        var path = Path.Join(_folder.Root, "broken.json");
         File.WriteAllText(path, "{\n  \"schemaVersion\": 1,\n  oops\n}");
 
         var ex = Assert.Throws<ScanResultFileException>(() => ScanResultFile.Load(path));
@@ -97,7 +97,7 @@ public sealed class ScanResultFileTests : IDisposable
     [Fact]
     public void MissingRequiredPropertyIsRejected()
     {
-        var path = Path.Combine(_folder.Root, "incomplete.json");
+        var path = Path.Join(_folder.Root, "incomplete.json");
         File.WriteAllText(path, """{ "schemaVersion": 1, "sourceRoot": "C:\\a" }""");
 
         Assert.Throws<ScanResultFileException>(() => ScanResultFile.Load(path));
@@ -119,7 +119,7 @@ public sealed class ScanResultFileTests : IDisposable
     [InlineData("")]
     public void EmptyOrNullFileIsRejected(string content)
     {
-        var path = Path.Combine(_folder.Root, "empty.json");
+        var path = Path.Join(_folder.Root, "empty.json");
         File.WriteAllText(path, content);
 
         Assert.Throws<ScanResultFileException>(() => ScanResultFile.Load(path));
@@ -128,7 +128,7 @@ public sealed class ScanResultFileTests : IDisposable
     [Fact]
     public void MissingFileIsReported()
     {
-        var path = Path.Combine(_folder.Root, "nope.json");
+        var path = Path.Join(_folder.Root, "nope.json");
 
         var ex = Assert.Throws<ScanResultFileException>(() => ScanResultFile.Load(path));
 
@@ -139,7 +139,7 @@ public sealed class ScanResultFileTests : IDisposable
     public void DefaultOutputFolderIsInDocuments()
     {
         Assert.Equal(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MissingFiles"),
+            Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MissingFiles"),
             ScanResultFile.DefaultOutputFolder);
     }
 

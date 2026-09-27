@@ -18,6 +18,7 @@ public sealed class ExtensionFilter
 
     private readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _lookup;
 
+    /// <summary>Creates a filter for the given extensions.</summary>
     /// <param name="extensions">Extensions in any accepted spelling (see <see cref="Normalize"/>).</param>
     /// <exception cref="ArgumentException">An extension is invalid, or the list is empty.</exception>
     public ExtensionFilter(IEnumerable<string> extensions)

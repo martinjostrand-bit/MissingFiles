@@ -34,7 +34,7 @@ public class FileTypesFileTests
     [Fact]
     public void DefaultFileNextToExecutablesEqualsBuiltInDefault()
     {
-        var shipped = Path.Combine(AppContext.BaseDirectory, FileTypesFile.DefaultFileName);
+        var shipped = Path.Join(AppContext.BaseDirectory, FileTypesFile.DefaultFileName);
 
         var fromFile = FileTypesFile.Load(shipped);
 
@@ -160,7 +160,7 @@ public class FileTypesFileTests
     [Fact]
     public void LoadMissingFileNamesTheFile() // TC-23
     {
-        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing.json");
+        var path = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing.json");
 
         var ex = Assert.Throws<FileTypesException>(() => FileTypesFile.Load(path));
 
@@ -172,7 +172,7 @@ public class FileTypesFileTests
     public void EnsureUserFileCreatesDefaultAndNeverOverwrites()
     {
         using var folder = new TestFolder();
-        var path = Path.Combine(folder.Root, "settings", "FileTypes.json");
+        var path = Path.Join(folder.Root, "settings", "FileTypes.json");
 
         Assert.Equal(path, FileTypesFile.EnsureUserFile(path));
         Assert.Equal(3, FileTypesFile.Load(path).Groups.Count);
@@ -185,7 +185,7 @@ public class FileTypesFileTests
     [Fact]
     public void UserFileIsInAppData()
     {
-        Assert.EndsWith(Path.Combine("MissingFiles", "FileTypes.json"), FileTypesFile.UserFilePath, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith(Path.Join("MissingFiles", "FileTypes.json"), FileTypesFile.UserFilePath, StringComparison.OrdinalIgnoreCase);
         Assert.StartsWith(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             FileTypesFile.UserFilePath,

@@ -23,7 +23,7 @@ public static class ScanResultFile
     };
 
     /// <summary>Default output folder: <c>Documents\MissingFiles</c> (REQ-18).</summary>
-    public static string DefaultOutputFolder { get; } = Path.Combine(
+    public static string DefaultOutputFolder { get; } = Path.Join(
         Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MissingFiles");
 
     /// <summary>
@@ -42,7 +42,7 @@ public static class ScanResultFile
         for (var attempt = 1; ; attempt++)
         {
             var fileName = attempt == 1 ? $"{baseName}.json" : $"{baseName}_{attempt}.json";
-            var path = Path.GetFullPath(Path.Combine(outputFolder, fileName));
+            var path = Path.GetFullPath(Path.Join(outputFolder, fileName));
             if (File.Exists(path))
             {
                 continue;

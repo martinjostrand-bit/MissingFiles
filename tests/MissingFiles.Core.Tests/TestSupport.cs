@@ -5,9 +5,9 @@ internal sealed class TestFolder : IDisposable
 {
     public TestFolder()
     {
-        Root = Path.Combine(Path.GetTempPath(), "MissingFilesTests", Guid.NewGuid().ToString("N"));
-        Source = Path.Combine(Root, "source");
-        Destination = Path.Combine(Root, "destination");
+        Root = Path.Join(Path.GetTempPath(), "MissingFilesTests", Guid.NewGuid().ToString("N"));
+        Source = Path.Join(Root, "source");
+        Destination = Path.Join(Root, "destination");
         Directory.CreateDirectory(Source);
         Directory.CreateDirectory(Destination);
     }
@@ -33,7 +33,7 @@ internal sealed class TestFolder : IDisposable
 
     public static string CreateFile(string root, string relativePath, int size = 10)
     {
-        var path = Path.Combine(root, relativePath);
+        var path = Path.Join(root, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, new byte[size]);
         return path;

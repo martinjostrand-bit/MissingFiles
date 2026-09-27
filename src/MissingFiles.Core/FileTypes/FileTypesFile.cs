@@ -23,7 +23,7 @@ public static class FileTypesFile
     };
 
     /// <summary>The user's editable file: <c>%APPDATA%\MissingFiles\FileTypes.json</c> (REQ-05b).</summary>
-    public static string UserFilePath { get; } = Path.Combine(
+    public static string UserFilePath { get; } = Path.Join(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MissingFiles", "FileTypes.json");
 
     /// <summary>Reads and validates a file types file.</summary>

@@ -129,7 +129,7 @@ public sealed class ScannerTests : IDisposable
     [Fact]
     public void EmptyFoldersGiveEmptyResult() // TC-10
     {
-        Directory.CreateDirectory(Path.Combine(_folder.Source, "empty", "nested"));
+        Directory.CreateDirectory(Path.Join(_folder.Source, "empty", "nested"));
 
         var result = Scan();
 
@@ -140,9 +140,9 @@ public sealed class ScannerTests : IDisposable
     public void PathsLongerThan260CharactersAreHandled() // TC-11
     {
         var deep = string.Join('\\', Enumerable.Repeat("a_rather_long_folder_name_for_testing", 8));
-        var relative = Path.Combine(deep, "IMG_0001.JPG");
+        var relative = Path.Join(deep, "IMG_0001.JPG");
         _folder.AddSource(relative);
-        Assert.True(Path.Combine(_folder.Source, relative).Length > 260);
+        Assert.True(Path.Join(_folder.Source, relative).Length > 260);
 
         var result = Scan();
 
@@ -159,7 +159,7 @@ public sealed class ScannerTests : IDisposable
 
         _folder.AddSource("IMG_0001.JPG");
         _folder.AddSource(@"locked\IMG_0002.JPG");
-        var locked = new DirectoryInfo(Path.Combine(_folder.Source, "locked"));
+        var locked = new DirectoryInfo(Path.Join(_folder.Source, "locked"));
         var user = WindowsIdentity.GetCurrent().User!;
         var deny = new FileSystemAccessRule(user, FileSystemRights.ListDirectory, AccessControlType.Deny);
         var security = locked.GetAccessControl();
@@ -210,7 +210,7 @@ public sealed class ScannerTests : IDisposable
         var hiddenFile = _folder.AddSource("IMG_0003.JPG");
         File.SetAttributes(hiddenFile, FileAttributes.Hidden);
         _folder.AddSource(@"hidden\IMG_0004.JPG");
-        File.SetAttributes(Path.Combine(_folder.Source, "hidden"), FileAttributes.Directory | FileAttributes.Hidden);
+        File.SetAttributes(Path.Join(_folder.Source, "hidden"), FileAttributes.Directory | FileAttributes.Hidden);
         _folder.AddSource("IMG_0005.JPG");
 
         var result = Scan();
@@ -227,12 +227,12 @@ public sealed class ScannerTests : IDisposable
         }
 
         _folder.AddSource(@"photos\IMG_0001.JPG");
-        var junction = Path.Combine(_folder.Source, "photos", "loop");
+        var junction = Path.Join(_folder.Source, "photos", "loop");
         RunCmd($"mklink /J \"{junction}\" \"{_folder.Source}\"");
 
         try
         {
-            Assert.True(Directory.Exists(Path.Combine(junction, "photos")));
+            Assert.True(Directory.Exists(Path.Join(junction, "photos")));
 
             Assert.Equal(1, Scan().Summary.SourceFilesScanned);
         }
@@ -274,8 +274,8 @@ public sealed class ScannerTests : IDisposable
     [InlineData("empty source")]
     public void InvalidFoldersAreRejected(string scenario) // TC-14, REQ-02
     {
-        var inside = Directory.CreateDirectory(Path.Combine(_folder.Source, "inner")).FullName;
-        var missing = Path.Combine(_folder.Root, "does-not-exist");
+        var inside = Directory.CreateDirectory(Path.Join(_folder.Source, "inner")).FullName;
+        var missing = Path.Join(_folder.Root, "does-not-exist");
         var (source, destination, message) = scenario switch
         {
             "same" => (_folder.Source, _folder.Source + @"\", "same folder"),
@@ -294,8 +294,8 @@ public sealed class ScannerTests : IDisposable
     [Fact]
     public void SiblingFolderWithCommonPrefixIsNotNested()
     {
-        var a = Directory.CreateDirectory(Path.Combine(_folder.Root, "photos")).FullName;
-        var b = Directory.CreateDirectory(Path.Combine(_folder.Root, "photos2")).FullName;
+        var a = Directory.CreateDirectory(Path.Join(_folder.Root, "photos")).FullName;
+        var b = Directory.CreateDirectory(Path.Join(_folder.Root, "photos2")).FullName;
 
         var result = Scanner.Run(Options(a, b));
 
