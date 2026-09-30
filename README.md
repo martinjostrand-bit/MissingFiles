@@ -9,7 +9,17 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line). Next: WP4 (WPF UI).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view). Next: WP5 (desktop app: copy).
+
+## Desktop app
+
+Start `MissingFiles.exe`, choose the source and destination folders, tick the file type groups to compare,
+and press **Start scan**. The result shows the counters, the path of the result file, and the list of missing
+files, which can be sorted and filtered. **Open result file...** shows the result of an earlier scan.
+The folders and the file types file are remembered for the next start.
+
+File types come from `%APPDATA%\MissingFiles\FileTypes.json`, created from the built-in default on first start.
+Use **Edit** to open it in a text editor and **Reload** after saving it.
 
 ## Command line
 
@@ -64,7 +74,8 @@ dotnet publish src/MissingFiles.Cli -c Release -r win-x64 --self-contained -p:Pu
 | `src/MissingFiles.Core` | All logic: scanning, matching, copying, JSON, logging. No UI code. |
 | `src/MissingFiles.Cli` | Command line interface (`MissingFiles.Cli.exe`). |
 | `src/MissingFiles.App` | WPF desktop app (`MissingFiles.exe`). |
-| `tests/MissingFiles.Core.Tests` | Unit tests. |
+| `tests/MissingFiles.Core.Tests` | Unit tests of the core library. |
+| `tests/MissingFiles.App.Tests` | Unit tests of the desktop app view models. |
 | `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5). |
 
 ## Windows SmartScreen warning

@@ -1,0 +1,52 @@
+<Window x:Class="MissingFiles.App.Views.ProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MissingFiles.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:ProgressViewModel}"
+        Title="{Binding Title}"
+        Width="460" SizeToContent="Height"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="20">
+        <TextBlock Text="{Binding Phase}" FontWeight="SemiBold" Margin="0,0,0,12"
+                   AutomationProperties.AutomationId="Phase" AutomationProperties.LiveSetting="Polite" />
+
+        <ItemsControl ItemsSource="{Binding Items}" Focusable="False" IsTabStop="False">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ProgressItem}">
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Label, StringFormat={}{0}:}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextAlignment="Right"
+                                   AutomationProperties.Name="{Binding Label}" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Margin="0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Elapsed time:" />
+            <TextBlock Grid.Column="1" Text="{Binding ElapsedText}" TextAlignment="Right"
+                       AutomationProperties.AutomationId="Elapsed" AutomationProperties.Name="Elapsed time" />
+        </Grid>
+
+        <ProgressBar Height="6" Margin="0,16,0,16"
+                     IsIndeterminate="{Binding IsIndeterminate, Mode=OneWay}"
+                     Value="{Binding Percent, Mode=OneWay, TargetNullValue=0}" Maximum="100"
+                     AutomationProperties.Name="Progress" />
+
+        <Button Content="_Cancel" HorizontalAlignment="Right" MinWidth="100" IsCancel="True"
+                Command="{Binding CancelCommand}"
+                AutomationProperties.AutomationId="CancelButton" />
+    </StackPanel>
+</Window>

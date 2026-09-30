@@ -1,9 +1,7 @@
-﻿<Application x:Class="MissingFiles.App.App"
+<Application x:Class="MissingFiles.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:MissingFiles.App"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-         
-    </Application.Resources>
+             ThemeMode="System">
+    <!-- ThemeMode="System": Fluent theme, light or dark as set in Windows (NFR-08). -->
+    <Application.Resources />
 </Application>

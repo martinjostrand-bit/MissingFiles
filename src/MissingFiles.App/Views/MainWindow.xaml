@@ -1,0 +1,264 @@
+<Window x:Class="MissingFiles.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MissingFiles.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Title="MissingFiles" Width="1050" Height="820" MinWidth="720" MinHeight="560"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0,0,12,0" />
+        </Style>
+        <Style x:Key="SideButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="MinWidth" Value="90" />
+        </Style>
+        <Style x:Key="SummaryValue" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,24,4" />
+        </Style>
+        <Style x:Key="SummaryLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,8,4" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Folders (REQ-01, REQ-04) -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Folders" Style="{StaticResource SectionHeader}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Label Content="_Source folder:" Target="{Binding ElementName=SourceBox}" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="SourceBox" Grid.Column="1" Margin="0,0,0,6"
+                         Text="{Binding SourceFolder, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="The folder to check, e.g. a camera card or an old disk"
+                         AutomationProperties.AutomationId="SourceFolder" AutomationProperties.Name="Source folder" />
+                <Button Grid.Column="2" Content="Browse..." Margin="8,0,0,6" MinWidth="90"
+                        Command="{Binding BrowseSourceCommand}"
+                        AutomationProperties.AutomationId="BrowseSource" AutomationProperties.Name="Browse source folder" />
+
+                <Label Grid.Row="1" Content="_Destination folder:" Target="{Binding ElementName=DestinationBox}" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="DestinationBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,6"
+                         Text="{Binding DestinationFolder, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="The folder that should contain all the files, e.g. your photo archive"
+                         AutomationProperties.AutomationId="DestinationFolder" AutomationProperties.Name="Destination folder" />
+                <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Margin="8,0,0,6" MinWidth="90"
+                        Command="{Binding BrowseDestinationCommand}"
+                        AutomationProperties.AutomationId="BrowseDestination" AutomationProperties.Name="Browse destination folder" />
+
+                <Label Grid.Row="2" Content="Save _results in:" Target="{Binding ElementName=OutputBox}" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="OutputBox" Grid.Row="2" Grid.Column="1"
+                         Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.AutomationId="OutputFolder" AutomationProperties.Name="Folder for result files" />
+                <Button Grid.Row="2" Grid.Column="2" Content="Browse..." Style="{StaticResource SideButton}"
+                        Command="{Binding BrowseOutputCommand}"
+                        AutomationProperties.AutomationId="BrowseOutput" AutomationProperties.Name="Browse folder for result files" />
+            </Grid>
+        </StackPanel>
+
+        <!-- File types (REQ-05c, REQ-05d, REQ-06) -->
+        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+            <TextBlock Text="File types" Style="{StaticResource SectionHeader}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Label Content="File _types file:" Target="{Binding ElementName=FileTypesBox}" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="FileTypesBox" Grid.Column="1" IsReadOnly="True" Text="{Binding FileTypesFilePath, Mode=OneWay}"
+                         AutomationProperties.AutomationId="FileTypesFile" AutomationProperties.Name="File types file" />
+                <Button Grid.Column="2" Content="C_hoose..." Style="{StaticResource SideButton}" Command="{Binding ChooseFileTypesFileCommand}"
+                        ToolTip="Use another file types file" AutomationProperties.AutomationId="ChooseFileTypes" />
+                <Button Grid.Column="3" Content="_Edit" Style="{StaticResource SideButton}" Command="{Binding OpenFileTypesFileCommand}"
+                        ToolTip="Open the file types file in a text editor" AutomationProperties.AutomationId="EditFileTypes"
+                        AutomationProperties.Name="Edit file types file" />
+                <Button Grid.Column="4" Content="Re_load" Style="{StaticResource SideButton}" Command="{Binding ReloadFileTypesCommand}"
+                        ToolTip="Read the file types file again after editing it" AutomationProperties.AutomationId="ReloadFileTypes"
+                        AutomationProperties.Name="Reload file types file" />
+            </Grid>
+
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="Firebrick"
+                       Text="{Binding FileTypesError}"
+                       Visibility="{Binding HasFileTypesError, Converter={StaticResource BoolToVisibility}}"
+                       AutomationProperties.AutomationId="FileTypesError" AutomationProperties.LiveSetting="Assertive" />
+
+            <ItemsControl ItemsSource="{Binding Groups}" Margin="0,8,0,0" Focusable="False" IsTabStop="False"
+                          AutomationProperties.Name="File type groups">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:FileTypeGroupViewModel}">
+                        <CheckBox IsChecked="{Binding IsChecked}" Margin="0,2" AutomationProperties.Name="{Binding Name}"
+                                  ToolTip="{Binding ExtensionsText}">
+                            <TextBlock TextTrimming="CharacterEllipsis">
+                                <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" />
+                                <Run Text="  " />
+                                <Run Text="{Binding ExtensionsText, Mode=OneWay}" Foreground="Gray" />
+                            </TextBlock>
+                        </CheckBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <!-- Actions (REQ-12, REQ-21a) -->
+        <DockPanel Grid.Row="2" Margin="0,20,0,0" LastChildFill="True">
+            <!-- AccentButtonStyle does not turn "_" into an access key by itself, so AccessText does it. -->
+            <Button DockPanel.Dock="Left" MinWidth="130" IsDefault="True"
+                    Style="{DynamicResource AccentButtonStyle}"
+                    Command="{Binding StartScanCommand}"
+                    AutomationProperties.AutomationId="StartScan" AutomationProperties.Name="Start scan">
+                <AccessText Text="_Start scan" />
+            </Button>
+            <Button DockPanel.Dock="Left" Content="_Open result file..." Style="{StaticResource SideButton}"
+                    Command="{Binding OpenResultFileCommand}"
+                    ToolTip="Show the result of an earlier scan"
+                    AutomationProperties.AutomationId="OpenResultFile" />
+            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                       Text="{Binding StatusMessage}"
+                       AutomationProperties.AutomationId="StatusMessage" AutomationProperties.LiveSetting="Polite" />
+        </DockPanel>
+
+        <!-- Result (REQ-20, REQ-21) -->
+        <Grid Grid.Row="3" Margin="0,20,0,0" DataContext="{Binding Result}"
+              Visibility="{Binding DataContext.HasResult, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Style="{StaticResource SectionHeader}">
+                <Run Text="Result" />
+                <Run Text="{Binding ScanTimeText, Mode=OneWay}" FontWeight="Normal" FontSize="13" Foreground="Gray" />
+            </TextBlock>
+
+            <WrapPanel Grid.Row="1" AutomationProperties.Name="Scan summary">
+                <TextBlock Text="Files scanned:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.SourceFilesScanned, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="FilesScanned" AutomationProperties.Name="Files scanned" />
+                <TextBlock Text="Matched:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.Matched, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="Matched" AutomationProperties.Name="Matched" />
+                <TextBlock Text="Missing:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.Missing, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="Missing" AutomationProperties.Name="Missing" />
+                <TextBlock Text="Same name, other size:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.SameNameDifferentSize, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.Name="Same name, other size" />
+                <TextBlock Text="Folders not readable:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.Errors, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="Errors" AutomationProperties.Name="Folders not readable" />
+                <TextBlock Style="{StaticResource SummaryLabel}" Foreground="DarkOrange"
+                           Visibility="{Binding HasDuplicateNames, Converter={StaticResource BoolToVisibility}}"
+                           ToolTip="Each of these file names occurs in more than one source folder. A single file in the destination can match all of them.">
+                    <Run Text="Warning:" FontWeight="SemiBold" />
+                    <Run Text="{Binding Summary.DuplicateNameGroups, Mode=OneWay, StringFormat=N0}" />
+                    <Run Text="file names occur more than once in the source" />
+                </TextBlock>
+            </WrapPanel>
+
+            <DockPanel Grid.Row="2" Margin="0,4,0,0">
+                <Label DockPanel.Dock="Left" Content="Result file:" Style="{StaticResource FieldLabel}" />
+                <Button DockPanel.Dock="Right" Content="Show in _folder" Style="{StaticResource SideButton}"
+                        Command="{Binding OpenResultFolderCommand}"
+                        AutomationProperties.AutomationId="ShowResultFile" />
+                <TextBox IsReadOnly="True" Text="{Binding ResultFilePath, Mode=OneWay}"
+                         AutomationProperties.AutomationId="ResultFilePath" AutomationProperties.Name="Result file" />
+            </DockPanel>
+
+            <Expander Grid.Row="3" Margin="0,8,0,0"
+                      Visibility="{Binding HasErrors, Converter={StaticResource BoolToVisibility}}"
+                      Header="{Binding Errors.Count}" HeaderStringFormat="Folders that could not be read ({0})"
+                      AutomationProperties.AutomationId="ErrorsExpander">
+                <ListBox ItemsSource="{Binding Errors}" MaxHeight="120" Margin="0,4,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Path, Mode=OneWay}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding Message, Mode=OneWay}" Foreground="Gray" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Expander>
+
+            <Grid Grid.Row="4" Margin="0,12,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel Margin="0,0,0,6">
+                    <TextBlock DockPanel.Dock="Left" Text="Missing files" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding VisibleCountText}" VerticalAlignment="Center" Foreground="Gray"
+                               AutomationProperties.AutomationId="VisibleCount" />
+                    <Label DockPanel.Dock="Left" Content="Fi_lter:" Target="{Binding ElementName=FilterBox}" Margin="24,0,0,0" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="FilterBox" Width="280" HorizontalAlignment="Left"
+                             Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
+                             ToolTip="Show only files whose path contains this text"
+                             AutomationProperties.AutomationId="Filter" AutomationProperties.Name="Filter missing files" />
+                </DockPanel>
+
+                <!-- Rows are virtualized: only visible rows are created (NFR-03a). Sorting is done by the view model. -->
+                <DataGrid x:Name="MissingFilesGrid" Grid.Row="1"
+                          ItemsSource="{Binding VisibleMissingFiles}"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+                          CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                          Sorting="MissingFilesGrid_Sorting"
+                          AutomationProperties.AutomationId="MissingFiles" AutomationProperties.Name="Missing files">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Relative path" Binding="{Binding RelativePath}" SortMemberPath="RelativePath"
+                                            SortDirection="Ascending" Width="*" />
+                        <DataGridTextColumn Header="Size" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                    <Setter Property="Margin" Value="0,0,12,0" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Last modified" Binding="{Binding LastWriteTime, StringFormat=g, ConverterCulture={x:Static glob:CultureInfo.CurrentCulture}}"
+                                            SortMemberPath="LastWriteTime" Width="150"
+                                            xmlns:glob="clr-namespace:System.Globalization;assembly=System.Runtime" />
+                        <DataGridTextColumn Header="Same name, other size" Binding="{Binding SameNameDifferentSizeText}"
+                                            SortMemberPath="SameNameDifferentSize" Width="180" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

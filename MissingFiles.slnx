@@ -5,6 +5,7 @@
     <Project Path="src/MissingFiles.Core/MissingFiles.Core.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MissingFiles.App.Tests/MissingFiles.App.Tests.csproj" />
     <Project Path="tests/MissingFiles.Core.Tests/MissingFiles.Core.Tests.csproj" />
     <Project Path="tests/MissingFiles.FunctionalTests/MissingFiles.FunctionalTests.csproj" />
   </Folder>
