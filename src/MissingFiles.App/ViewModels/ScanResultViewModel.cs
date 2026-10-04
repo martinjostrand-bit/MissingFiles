@@ -44,18 +44,25 @@ public sealed partial class ScanResultViewModel : ObservableObject
     private readonly IShellService _shell;
     private readonly List<MissingFileRow> _allRows;
     private string _sortMember = SortByPath;
+    private readonly Func<ScanResult, CopyPreview> _preview;
     private ListSortDirection _sortDirection = ListSortDirection.Ascending;
 
-    public ScanResultViewModel(ScanResult result, string resultFilePath, IShellService shell)
+    /// <param name="result">The scan result to show.</param>
+    /// <param name="resultFilePath">The file the result was saved to or loaded from.</param>
+    /// <param name="shell">Used to show files in Explorer.</param>
+    /// <param name="preview">Checks the folders and free space for a copy; <see cref="Copier.Preview(ScanResult)"/> by default.</param>
+    public ScanResultViewModel(ScanResult result, string resultFilePath, IShellService shell, Func<ScanResult, CopyPreview>? preview = null)
     {
         ArgumentNullException.ThrowIfNull(result);
 
         Result = result;
         ResultFilePath = resultFilePath;
         _shell = shell;
+        _preview = preview ?? Copier.Preview;
         _allRows = [.. result.MissingFiles.Select(f => new MissingFileRow(f))];
         VisibleMissingFiles = _allRows;
         ApplyView();
+        RefreshCopyPreview();
     }
 
     public ScanResult Result { get; }
@@ -92,6 +99,47 @@ public sealed partial class ScanResultViewModel : ObservableObject
         _sortMember = member;
         _sortDirection = direction;
         ApplyView();
+    }
+
+    /// <summary>The folders, file count, total size and free space of a copy (REQ-23); null if the folders are not usable.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FreeSpaceText))]
+    public partial CopyPreview? CopyPreview { get; private set; }
+
+    /// <summary>Why the files cannot be copied, or null if they can (REQ-23).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCopyProblem))]
+    public partial string? CopyProblem { get; private set; }
+
+    public bool HasCopyProblem => CopyProblem is not null;
+
+    public string TotalSizeText => Copier.FormatBytes(Result.MissingFiles.Sum(f => f.SizeBytes));
+
+    public string FreeSpaceText => CopyPreview?.FreeBytes is { } free ? Copier.FormatBytes(free) : "unknown";
+
+    /// <summary>The result of the last copy of these files, or null if they were not copied yet (REQ-31).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLastCopy))]
+    public partial CopyResultViewModel? LastCopy { get; set; }
+
+    public bool HasLastCopy => LastCopy is not null;
+
+    /// <summary>Checks the folders and the free space again, e.g. just before copying.</summary>
+    public void RefreshCopyPreview()
+    {
+        try
+        {
+            var preview = _preview(Result);
+            CopyPreview = preview;
+            CopyProblem = preview.FileCount == 0 ? "There are no missing files to copy."
+                : !preview.HasEnoughSpace ? $"Not enough free space on the destination drive: {Copier.FormatBytes(preview.TotalBytes)} needed, {Copier.FormatBytes(preview.FreeBytes!.Value)} available."
+                : null;
+        }
+        catch (CopyValidationException ex)
+        {
+            CopyPreview = null;
+            CopyProblem = ex.Message;
+        }
     }
 
     [RelayCommand]

@@ -1,17 +1,19 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using MissingFiles.App.Services;
+using MissingFiles.Core.Copying;
 using MissingFiles.Core.FileTypes;
 using MissingFiles.Core.Scanning;
 
 namespace MissingFiles.App.ViewModels;
 
 /// <summary>
-/// The main window: folders, file types, starting a scan and showing its result (spec §4.1–4.6).
+/// The main window: folders, file types, scan, result and copy (spec §4.1–4.8).
 /// </summary>
 public sealed partial class MainViewModel : ObservableObject
 {
@@ -66,6 +68,8 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The scan result shown in the result view, or null before the first scan.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasResult))]
+    [NotifyCanExecuteChangedFor(nameof(StartCopyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ShowLastCopyCommand))]
     public partial ScanResultViewModel? Result { get; private set; }
 
     public bool HasResult => Result is not null;
@@ -206,6 +210,79 @@ public sealed partial class MainViewModel : ObservableObject
         Result = new ScanResultViewModel(result!, resultPath, _shell);
         StatusMessage = $"Scan finished: {result!.Summary.Missing:N0} missing files.";
     }
+
+    /// <summary>
+    /// Copies the missing files of the shown scan result to the destination, with a progress dialog,
+    /// then writes the copy log and shows the copy result (REQ-22..REQ-32).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanStartCopy))]
+    private async Task StartCopyAsync()
+    {
+        var scan = Result!;
+        StatusMessage = null;
+
+        // The folders or the free space may have changed since the result was shown.
+        scan.RefreshCopyPreview();
+        if (scan.CopyProblem is { } problem)
+        {
+            _dialogs.ShowError("Cannot start the copy", problem);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(OutputFolder))
+        {
+            _dialogs.ShowError("Cannot start the copy", "Choose a folder for the copy log.");
+            return;
+        }
+
+        var preview = scan.CopyPreview!;
+        var question = string.Create(
+            CultureInfo.CurrentCulture,
+            $"Copy {preview.FileCount:N0} {(preview.FileCount == 1 ? "file" : "files")} ({Copier.FormatBytes(preview.TotalBytes)})?\n\nFrom: {preview.SourceRoot}\nTo: {preview.DestinationRoot}\n\nEach file is copied to the same relative path in the destination. Existing files are never overwritten.");
+        if (!_dialogs.Confirm("Copy missing files", question))
+        {
+            return;
+        }
+
+        using var progress = new CopyProgressViewModel(_time);
+        var reporter = new Progress<CopyProgress>(progress.Update);
+        CopyResult? result = null;
+        try
+        {
+            var options = new CopyOptions { ScanResult = scan.Result, ScanResultFilePath = scan.ResultFilePath, TimeProvider = _time };
+            await _dialogs.RunWithProgressAsync(
+                progress,
+                () => Task.Run(() => result = Copier.Run(options, reporter, progress.CancellationToken)));
+        }
+        catch (CopyValidationException ex)
+        {
+            _dialogs.ShowError("Cannot start the copy", ex.Message);
+            return;
+        }
+
+        string? logPath = null;
+        try
+        {
+            logPath = CopyLogFile.Save(result!, OutputFolder);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            _dialogs.ShowError("Cannot save the copy log", $"The copy log could not be written to '{OutputFolder}': {ex.Message}");
+        }
+
+        scan.LastCopy = new CopyResultViewModel(result!, logPath, _shell);
+        StatusMessage = scan.LastCopy.StatusText;
+        ShowLastCopyCommand.NotifyCanExecuteChanged();
+        _dialogs.ShowCopyResult(scan.LastCopy);
+    }
+
+    private bool CanStartCopy() => Result is { Result.MissingFiles.Count: > 0 };
+
+    /// <summary>Shows the result of the last copy again (REQ-31).</summary>
+    [RelayCommand(CanExecute = nameof(CanShowLastCopy))]
+    private void ShowLastCopy() => _dialogs.ShowCopyResult(Result!.LastCopy!);
+
+    private bool CanShowLastCopy() => Result?.LastCopy is not null;
 
     private bool CanStartScan() =>
         !string.IsNullOrWhiteSpace(SourceFolder) && !string.IsNullOrWhiteSpace(DestinationFolder) && FileTypesError is null;

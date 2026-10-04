@@ -48,6 +48,14 @@ public sealed class WpfDialogService : IDialogService
         }
     }
 
+    public bool Confirm(string title, string message)
+    {
+        var result = Owner is { } owner
+            ? MessageBox.Show(owner, message, title, MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel)
+            : MessageBox.Show(message, title, MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+        return result == MessageBoxResult.OK;
+    }
+
     public async Task RunWithProgressAsync(ProgressViewModel progress, Func<Task> work)
     {
         ArgumentNullException.ThrowIfNull(work);
@@ -66,6 +74,9 @@ public sealed class WpfDialogService : IDialogService
         window.ShowDialog();
         await task.ConfigureAwait(true);
     }
+
+    public void ShowCopyResult(CopyResultViewModel result) =>
+        new CopyResultWindow { DataContext = result, Owner = Owner }.ShowDialog();
 
     private static Window? Owner => Application.Current?.MainWindow;
 }

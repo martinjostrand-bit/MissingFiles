@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view). Next: WP5 (desktop app: copy).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy). Next: WP6 (functional test suite).
 
 ## Desktop app
 
@@ -17,6 +17,10 @@ Start `MissingFiles.exe`, choose the source and destination folders, tick the fi
 and press **Start scan**. The result shows the counters, the path of the result file, and the list of missing
 files, which can be sorted and filtered. **Open result file...** shows the result of an earlier scan.
 The folders and the file types file are remembered for the next start.
+
+**Copy missing files...** shows what will be copied and asks for confirmation, then copies each file to the
+same relative path in the destination. Existing files are never overwritten. When the copy ends, the copy result
+lists the counters, the copy log and any files that were not copied; **Last copy result...** shows it again.
 
 File types come from `%APPDATA%\MissingFiles\FileTypes.json`, created from the built-in default on first start.
 Use **Edit** to open it in a text editor and **Reload** after saving it.

@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:MissingFiles.App.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-        Title="MissingFiles" Width="1050" Height="820" MinWidth="720" MinHeight="560"
+        Title="MissingFiles" Width="1050" Height="940" MinWidth="720" MinHeight="560"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
@@ -147,10 +147,11 @@
                        AutomationProperties.AutomationId="StatusMessage" AutomationProperties.LiveSetting="Polite" />
         </DockPanel>
 
-        <!-- Result (REQ-20, REQ-21) -->
+        <!-- Result (REQ-20, REQ-21), copy (REQ-22..REQ-31) -->
         <Grid Grid.Row="3" Margin="0,20,0,0" DataContext="{Binding Result}"
               Visibility="{Binding DataContext.HasResult, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -214,7 +215,50 @@
                 </ListBox>
             </Expander>
 
-            <Grid Grid.Row="4" Margin="0,12,0,0">
+            <!-- Copy (REQ-22, REQ-23, REQ-24) and its result (REQ-31) -->
+            <Border Grid.Row="4" Margin="0,12,0,0" Padding="12,10" CornerRadius="4" BorderThickness="1"
+                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0">
+                            <Button MinWidth="170" Style="{DynamicResource AccentButtonStyle}"
+                                    Command="{Binding DataContext.StartCopyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    ToolTip="Copy the missing files to the same relative path in the destination. Existing files are never overwritten."
+                                    AutomationProperties.AutomationId="StartCopy" AutomationProperties.Name="Copy missing files">
+                                <AccessText Text="_Copy missing files..." />
+                            </Button>
+                            <Button Content="Last cop_y result..." MinWidth="170" Margin="0,6,0,0"
+                                    Visibility="{Binding HasLastCopy, Converter={StaticResource BoolToVisibility}}"
+                                    Command="{Binding DataContext.ShowLastCopyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    AutomationProperties.AutomationId="ShowLastCopy" AutomationProperties.Name="Show last copy result" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Copy to the destination" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBlock TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CopySource">
+                                <Run Text="From:" Foreground="Gray" />
+                                <Run Text="{Binding Result.SourceRoot, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CopyDestination">
+                                <Run Text="To:" Foreground="Gray" />
+                                <Run Text="{Binding Result.DestinationRoot, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock AutomationProperties.AutomationId="CopySize">
+                                <Run Text="{Binding Result.MissingFiles.Count, Mode=OneWay, StringFormat=N0}" />
+                                <Run Text="files," />
+                                <Run Text="{Binding TotalSizeText, Mode=OneWay}" />
+                                <Run Text="  ·  Free space on the destination drive:" Foreground="Gray" />
+                                <Run Text="{Binding FreeSpaceText, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Foreground="DarkOrange"
+                                       Text="{Binding CopyProblem}"
+                                       Visibility="{Binding HasCopyProblem, Converter={StaticResource BoolToVisibility}}"
+                                       AutomationProperties.AutomationId="CopyProblem" />
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="5" Margin="0,12,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

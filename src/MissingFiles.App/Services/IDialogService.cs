@@ -13,11 +13,17 @@ public interface IDialogService
 
     void ShowError(string title, string message);
 
+    /// <summary>Asks a yes/no question; true if the user confirms.</summary>
+    bool Confirm(string title, string message);
+
     /// <summary>
     /// Shows a modal progress dialog while <paramref name="work"/> runs and closes it when the work ends.
     /// Exceptions of the work are rethrown.
     /// </summary>
     Task RunWithProgressAsync(ProgressViewModel progress, Func<Task> work);
+
+    /// <summary>Shows the result of a copy in a modal dialog (REQ-31).</summary>
+    void ShowCopyResult(CopyResultViewModel result);
 }
 
 /// <summary>Opens files and folders in other programs; replaced in tests.</summary>

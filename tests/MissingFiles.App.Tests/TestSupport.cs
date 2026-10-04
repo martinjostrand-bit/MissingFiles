@@ -76,6 +76,21 @@ internal sealed class FakeDialogService : IDialogService
 
     public void ShowError(string title, string message) => Errors.Add((title, message));
 
+    /// <summary>Answers to <see cref="Confirm"/>; true when empty.</summary>
+    public Queue<bool> ConfirmAnswers { get; } = new();
+
+    public List<(string Title, string Message)> Confirmations { get; } = [];
+
+    public bool Confirm(string title, string message)
+    {
+        Confirmations.Add((title, message));
+        return ConfirmAnswers.Count == 0 || ConfirmAnswers.Dequeue();
+    }
+
+    public List<CopyResultViewModel> CopyResultDialogs { get; } = [];
+
+    public void ShowCopyResult(CopyResultViewModel result) => CopyResultDialogs.Add(result);
+
     public async Task RunWithProgressAsync(ProgressViewModel progress, Func<Task> work)
     {
         ProgressDialogs.Add(progress);

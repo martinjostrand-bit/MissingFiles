@@ -11,7 +11,7 @@
         ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
     <StackPanel Margin="20">
-        <TextBlock Text="{Binding Phase}" FontWeight="SemiBold" Margin="0,0,0,12"
+        <TextBlock Text="{Binding Phase}" FontWeight="SemiBold" Margin="0,0,0,12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Phase}"
                    AutomationProperties.AutomationId="Phase" AutomationProperties.LiveSetting="Polite" />
 
         <ItemsControl ItemsSource="{Binding Items}" Focusable="False" IsTabStop="False">

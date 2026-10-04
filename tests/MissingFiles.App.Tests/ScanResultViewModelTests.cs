@@ -1,6 +1,7 @@
 using System.ComponentModel;
 
 using MissingFiles.App.ViewModels;
+using MissingFiles.Core.Copying;
 using MissingFiles.Core.Scanning;
 
 namespace MissingFiles.App.Tests;
@@ -116,6 +117,72 @@ public class ScanResultViewModelTests
         Assert.True(vm.HasErrors);
         Assert.True(vm.HasDuplicateNames);
         Assert.Contains("took 00:01:28", vm.ScanTimeText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CopyPreviewShowsSizeAndFreeSpace() // REQ-23
+    {
+        var vm = new ScanResultViewModel(
+            Result([File("a.jpg", 1024), File("b.jpg", 1024)]), "r.json", new FakeShellService(),
+            r => new CopyPreview(r.SourceRoot, r.DestinationRoot, r.MissingFiles.Count, 2048, 5L * 1024 * 1024 * 1024));
+
+        Assert.Equal("2.0 KB", vm.TotalSizeText);
+        Assert.Equal("5.0 GB", vm.FreeSpaceText);
+        Assert.Null(vm.CopyProblem);
+        Assert.False(vm.HasCopyProblem);
+        Assert.False(vm.HasLastCopy);
+    }
+
+    [Fact]
+    public void NotEnoughFreeSpaceIsAProblem() // REQ-23
+    {
+        var vm = new ScanResultViewModel(
+            Result([File("a.jpg", 2048)]), "r.json", new FakeShellService(),
+            r => new CopyPreview(r.SourceRoot, r.DestinationRoot, 1, 2048, 1024));
+
+        Assert.True(vm.HasCopyProblem);
+        Assert.Equal("Not enough free space on the destination drive: 2.0 KB needed, 1.0 KB available.", vm.CopyProblem);
+    }
+
+    [Fact]
+    public void UnknownFreeSpaceIsNoProblem()
+    {
+        var vm = new ScanResultViewModel(
+            Result([File("a.jpg")]), "r.json", new FakeShellService(),
+            r => new CopyPreview(r.SourceRoot, r.DestinationRoot, 1, 10, null));
+
+        Assert.Equal("unknown", vm.FreeSpaceText);
+        Assert.Null(vm.CopyProblem);
+    }
+
+    [Fact]
+    public void NothingToCopyIsAProblem()
+    {
+        var vm = new ScanResultViewModel(
+            Result([]), "r.json", new FakeShellService(),
+            r => new CopyPreview(r.SourceRoot, r.DestinationRoot, 0, 0, 100));
+
+        Assert.Equal("There are no missing files to copy.", vm.CopyProblem);
+    }
+
+    [Fact]
+    public void MissingFolderIsAProblemAndRefreshClearsIt() // REQ-02, REQ-23
+    {
+        var folderExists = false;
+        var vm = new ScanResultViewModel(
+            Result([File("a.jpg")]), "r.json", new FakeShellService(),
+            r => folderExists
+                ? new CopyPreview(r.SourceRoot, r.DestinationRoot, 1, 10, 100)
+                : throw new CopyValidationException("The source folder does not exist."));
+
+        Assert.Null(vm.CopyPreview);
+        Assert.Equal("The source folder does not exist.", vm.CopyProblem);
+
+        folderExists = true;
+        vm.RefreshCopyPreview();
+
+        Assert.NotNull(vm.CopyPreview);
+        Assert.Null(vm.CopyProblem);
     }
 
     [Fact]

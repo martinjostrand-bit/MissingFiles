@@ -11,6 +11,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        // Use the height from the XAML where it fits, so the list of missing files gets more rows,
+        // but never more than the screen, e.g. on a laptop at 150 % scaling.
+        Height = Math.Max(MinHeight, Math.Min(Height, SystemParameters.WorkArea.Height - 40));
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;

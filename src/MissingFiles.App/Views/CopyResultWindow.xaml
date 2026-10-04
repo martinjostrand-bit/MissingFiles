@@ -1,0 +1,95 @@
+<Window x:Class="MissingFiles.App.Views.CopyResultWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MissingFiles.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:CopyResultViewModel}"
+        Title="Copy result" Width="820" Height="420" MinWidth="520" MinHeight="260"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+    <!-- The result of a copy (REQ-31): counters, the copy log and the files that were not copied. -->
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0,0,12,0" />
+        </Style>
+        <Style x:Key="SideButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="MinWidth" Value="90" />
+        </Style>
+        <Style x:Key="SummaryValue" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,24,4" />
+        </Style>
+        <Style x:Key="SummaryLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,8,4" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="{Binding HeadlineText}" FontWeight="SemiBold" Margin="0,0,0,4"
+                       AutomationProperties.AutomationId="CopyHeadline" />
+            <WrapPanel AutomationProperties.Name="Copy summary">
+                <TextBlock Text="Copied:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.Copied, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="CopyCopied" AutomationProperties.Name="Copied" />
+                <TextBlock Text="Skipped - exists:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.SkippedExists, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="CopySkippedExists" AutomationProperties.Name="Skipped, exists" />
+                <TextBlock Text="Skipped - source changed:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.SkippedSourceChanged, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="CopySkippedChanged" AutomationProperties.Name="Skipped, source changed" />
+                <TextBlock Text="Failed:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding Summary.Failed, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="CopyFailed" AutomationProperties.Name="Failed" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding HasNotProcessed, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Not processed:" Style="{StaticResource SummaryLabel}" />
+                    <TextBlock Text="{Binding Summary.NotProcessed, StringFormat=N0}" Style="{StaticResource SummaryValue}"
+                               AutomationProperties.AutomationId="CopyNotProcessed" AutomationProperties.Name="Not processed" />
+                </StackPanel>
+                <TextBlock Text="Data copied:" Style="{StaticResource SummaryLabel}" />
+                <TextBlock Text="{Binding BytesCopiedText}" Style="{StaticResource SummaryValue}"
+                           AutomationProperties.AutomationId="CopyBytes" AutomationProperties.Name="Data copied" />
+            </WrapPanel>
+
+            <DockPanel Margin="0,4,0,0">
+                <Label DockPanel.Dock="Left" Content="Copy log:" Style="{StaticResource FieldLabel}" />
+                <Button DockPanel.Dock="Right" Content="Show in folder" Style="{StaticResource SideButton}"
+                        Command="{Binding OpenLogFolderCommand}"
+                        AutomationProperties.AutomationId="ShowCopyLog" AutomationProperties.Name="Show copy log in folder" />
+                <TextBox IsReadOnly="True" Text="{Binding LogFilePath, Mode=OneWay, TargetNullValue='(not saved)'}"
+                         AutomationProperties.AutomationId="CopyLogPath" AutomationProperties.Name="Copy log" />
+            </DockPanel>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" Margin="0,12,0,6" FontWeight="SemiBold"
+                   Text="{Binding Problems.Count, StringFormat='Files not copied ({0:N0})'}"
+                   Visibility="{Binding HasProblems, Converter={StaticResource BoolToVisibility}}" />
+        <DataGrid Grid.Row="4" ItemsSource="{Binding Problems}"
+                  Visibility="{Binding HasProblems, Converter={StaticResource BoolToVisibility}}"
+                  AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal" EnableRowVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                  AutomationProperties.AutomationId="CopyProblems" AutomationProperties.Name="Files not copied">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="190" />
+                <DataGridTextColumn Header="Relative path" Binding="{Binding RelativePath}" Width="*" />
+                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Button Grid.Row="5" Content="Close" HorizontalAlignment="Right" MinWidth="100" Margin="0,16,0,0"
+                IsDefault="True" IsCancel="True" AutomationProperties.AutomationId="CloseButton" />
+    </Grid>
+</Window>

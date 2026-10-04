@@ -65,9 +65,12 @@ public abstract partial class ProgressViewModel : ObservableObject, IDisposable
     public void Cancel()
     {
         IsCancelling = true;
-        Phase = "Cancelling...";
+        Phase = CancellingText;
         _cancellation.Cancel();
     }
+
+    /// <summary>The phase text shown after Cancel was pressed.</summary>
+    protected virtual string CancellingText => "Cancelling...";
 
     private bool CanCancel() => !IsCancelling;
 
