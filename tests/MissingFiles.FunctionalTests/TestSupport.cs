@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using MissingFiles.Cli;
 
 namespace MissingFiles.FunctionalTests;
@@ -49,11 +51,16 @@ internal sealed class TestFolder : IDisposable
     public string[] OutputFiles(string pattern) =>
         Directory.Exists(Output) ? Directory.GetFiles(Output, pattern) : [];
 
+    /// <summary>Adds generated files (FT-01) to the source, each with its own size; returns their relative paths.</summary>
+    public IReadOnlyList<string> AddSourceFiles(IEnumerable<string> relativePaths) =>
+        [.. relativePaths.Select(p => { AddSource(p, TestData.SizeOf(p)); return p; })];
+
+    /// <summary>Creates a file with content from <see cref="TestData.Content"/>, so equal names and sizes give equal files.</summary>
     public static string CreateFile(string root, string relativePath, int size = 10)
     {
         var path = Path.Join(root, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllBytes(path, new byte[size]);
+        File.WriteAllBytes(path, TestData.Content(relativePath, size));
         return path;
     }
 
@@ -90,9 +97,10 @@ internal static class Cli
         string[] args,
         bool interactive = false,
         TimeProvider? timeProvider = null,
+        Action<string>? onOutput = null,
         CancellationToken cancellationToken = default)
     {
-        using var output = new StringWriter();
+        using var output = new ObservedWriter(onOutput);
         using var error = new StringWriter();
         var context = new CliContext(output, error, cancellationToken)
         {
@@ -109,4 +117,17 @@ internal static class Cli
     /// <summary>Runs <c>scan</c> on the test folder's source and destination.</summary>
     public static CliRun Scan(TestFolder folder, params string[] extraArgs) =>
         Run(folder, ["scan", "--source", folder.Source, "--dest", folder.Destination, .. extraArgs]);
+}
+
+/// <summary>Captures output and passes each piece to an observer, e.g. to cancel at a certain point.</summary>
+internal sealed class ObservedWriter(Action<string>? onWrite) : StringWriter(CultureInfo.InvariantCulture)
+{
+    public override void Write(string? value)
+    {
+        base.Write(value);
+        if (value is not null)
+        {
+            onWrite?.Invoke(value);
+        }
+    }
 }

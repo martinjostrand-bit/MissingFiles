@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy). Next: WP6 (functional test suite).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test). Next: WP7 (full pipeline: static analysis, security scanning, UI smoke tests).
 
 ## Desktop app
 
@@ -64,6 +64,18 @@ dotnet test
 dotnet format --verify-no-changes
 ```
 
+`tests/MissingFiles.FunctionalTests` runs the test cases of the specification (§5) through the command line:
+a scan of every case TC-01…TC-23 checked against the expected result file, and scan → copy → scan for each.
+The files are generated per test in the temp folder and deleted afterwards.
+
+The performance test (FT-10, 1,000,000 files per side) is skipped unless enabled. It runs nightly in the
+*Performance* workflow, or locally:
+
+```powershell
+$env:MISSINGFILES_PERF = '1'   # optional: MISSINGFILES_PERF_FILES, MISSINGFILES_PERF_MAX_SECONDS, MISSINGFILES_PERF_MAX_MB
+dotnet test tests/MissingFiles.FunctionalTests -c Release --filter Category=Performance
+```
+
 Build single-file executables:
 
 ```powershell
@@ -80,7 +92,7 @@ dotnet publish src/MissingFiles.Cli -c Release -r win-x64 --self-contained -p:Pu
 | `src/MissingFiles.App` | WPF desktop app (`MissingFiles.exe`). |
 | `tests/MissingFiles.Core.Tests` | Unit tests of the core library. |
 | `tests/MissingFiles.App.Tests` | Unit tests of the desktop app view models. |
-| `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5). |
+| `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5), test data generator and performance test. |
 
 ## Windows SmartScreen warning
 

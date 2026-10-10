@@ -1,0 +1,45 @@
+name: Performance
+
+# FT-10: scan of 1,000,000 files per side (NFR-01, NFR-03). Too slow for every push,
+# so it runs nightly and on demand.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      files:
+        description: Files per side
+        default: '1000000'
+      max_seconds:
+        description: Time limit for the scan in seconds
+        default: '600'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  performance:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build tests/MissingFiles.FunctionalTests -c Release
+
+      - name: Performance test
+        env:
+          MISSINGFILES_PERF: '1'
+          MISSINGFILES_PERF_FILES: ${{ github.event.inputs.files || '1000000' }}
+          # The NFR-01 limit of 2 minutes is for a local NVMe SSD. Hosted runners have slower,
+          # shared disks, so the default here is the 10 minute HDD limit of NFR-01.
+          MISSINGFILES_PERF_MAX_SECONDS: ${{ github.event.inputs.max_seconds || '600' }}
+        run: dotnet test tests/MissingFiles.FunctionalTests -c Release --no-build --filter "Category=Performance" --logger "console;verbosity=detailed"

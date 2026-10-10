@@ -135,6 +135,83 @@ public sealed class CopyCommandTests : IDisposable
         Assert.Equal(ExitCode.Success, second.Code);
     }
 
+    [Fact]
+    public void SourceChangedAfterScanIsSkipped() // FT-05, REQ-27
+    {
+        var deleted = _folder.AddSource(@"DCIM\IMG_0001.JPG", size: 400);
+        var resized = _folder.AddSource(@"DCIM\IMG_0002.JPG", size: 400);
+        var touched = _folder.AddSource(@"DCIM\IMG_0003.JPG", size: 400);
+        _folder.AddSource(@"DCIM\IMG_0004.JPG", size: 400);
+        var resultFile = ScanAndGetResultFile();
+        File.Delete(deleted);
+        File.AppendAllText(resized, "edited");
+        File.SetLastWriteTimeUtc(touched, File.GetLastWriteTimeUtc(touched).AddMinutes(-5));
+
+        var run = Copy(resultFile);
+
+        Assert.Equal(ExitCode.SuccessWithFindings, run.Code);
+        Assert.Matches(@"Copied:\s+1\b", run.Out);
+        Assert.Matches(@"Skipped - source changed:\s+3\b", run.Out);
+        Assert.Equal([@"DCIM\IMG_0004.JPG"], Directory.GetFiles(_folder.Destination, "*", SearchOption.AllDirectories)
+            .Select(p => Path.GetRelativePath(_folder.Destination, p)));
+        var log = File.ReadAllText(Assert.Single(_folder.OutputFiles("*.log")));
+        foreach (var name in new[] { "IMG_0001.JPG", "IMG_0002.JPG", "IMG_0003.JPG" })
+        {
+            Assert.Matches($@"Skipped - source changed\s+\| DCIM\\{name}", log);
+        }
+    }
+
+    [Fact]
+    public void CancelDuringCopyLeavesOnlyCompleteFiles() // FT-06, REQ-28, REQ-30
+    {
+        var paths = _folder.AddSourceFiles(TestData.RelativePaths(5));
+        var resultFile = ScanAndGetResultFile();
+        using var cts = new CancellationTokenSource();
+
+        // Press Ctrl+C as soon as the progress line shows that the first file is done.
+        var run = Cli.Run(
+            _folder,
+            ["copy", "--result", resultFile],
+            interactive: true,
+            timeProvider: new SteppingTimeProvider(),
+            cancellationToken: cts.Token,
+            onOutput: text =>
+            {
+                if (text.Contains("Copying: 1/5 files", StringComparison.Ordinal))
+                {
+                    cts.Cancel();
+                }
+            });
+
+        Assert.Equal(ExitCode.Cancelled, run.Code);
+        var copied = Assert.Single(Directory.GetFiles(_folder.Destination, "*", SearchOption.AllDirectories));
+        var relative = Path.GetRelativePath(_folder.Destination, copied);
+        Assert.Contains(relative, paths);
+        Assert.Equal(File.ReadAllBytes(Path.Join(_folder.Source, relative)), File.ReadAllBytes(copied));
+        var log = File.ReadAllText(Assert.Single(_folder.OutputFiles("*.log")));
+        Assert.Matches(@"Not processed:\s+4", log);
+        Assert.Matches(@"Cancelled:\s+Yes", log);
+    }
+
+    [Fact]
+    public void GeneratedCameraCardIsCopiedExactly() // FT-01, FT-03
+    {
+        var paths = _folder.AddSourceFiles(TestData.RelativePaths(40));
+        var resultFile = ScanAndGetResultFile();
+
+        var run = Copy(resultFile);
+
+        Assert.Equal(ExitCode.Success, run.Code);
+        Assert.Matches(@"Copied:\s+40\b", run.Out);
+        foreach (var path in paths)
+        {
+            var source = Path.Join(_folder.Source, path);
+            var target = Path.Join(_folder.Destination, path);
+            Assert.Equal(File.ReadAllBytes(source), File.ReadAllBytes(target));
+            Assert.Equal(File.GetLastWriteTimeUtc(source), File.GetLastWriteTimeUtc(target));
+        }
+    }
+
     [Theory]
     [InlineData(false, 0, 0, 0, ExitCode.Success)]
     [InlineData(false, 1, 0, 0, ExitCode.SuccessWithFindings)]
