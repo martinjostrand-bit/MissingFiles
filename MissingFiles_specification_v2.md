@@ -1,6 +1,6 @@
 # MissingFiles – Project Specification
 
-Version: 0.3 · Date: 2026-09-27 · Author: Martin Strand
+Version: 0.4 · Date: 2026-11-01 · Author: Martin Strand
 
 All open decisions are resolved (see §7).
 
@@ -46,7 +46,10 @@ Typical use case: verify that all photos and videos from a camera card, phone ba
 | WP5 | WPF UI: copy workflow, progress dialog, result view | WP2, WP4 |
 | WP6 | Functional test suite and test data generator | WP1, WP2 |
 | WP7 | Full pipeline: static analysis, security scanning, UI smoke tests | WP0 |
-| WP8 | Packaging/distribution, user documentation | WP3, WP5 |
+| WP8 | Packaging/distribution, user documentation | WP3, WP5, WP10, WP11 |
+| WP9 | Claude configuration: project instructions, agents, skills, independent verification (§3.5) | WP0 |
+| WP10 | Configuration management: four-part revision (§3.6) | WP0 |
+| WP11 | About information in UI and CLI (§4.10), `LICENSE` file | WP3, WP5, WP10 |
 
 ---
 
@@ -55,7 +58,7 @@ Typical use case: verify that all photos and videos from a camera card, phone ba
 ### 3.1 GitHub account
 Use the GitHub account `martinjostrand-bit` (email: martin.jo.strand@gmail.com) for this project — the same account used for my other repositories. When creating or initializing the repository, authenticating `gh`/`git`, or pushing code, use this account rather than any other account that might be available on this machine.
 
-- When a change is complete and tested: make a git commit with a short, descriptive message.
+- When a change is complete, tested and verified (DEV-05): make a git commit with a short, descriptive message.
 - After each commit: push to GitHub (`git push`) so the code is always backed up.
 
 ### 3.2 Tech stack
@@ -87,6 +90,56 @@ Runs on every push and pull request:
 | Security | GitHub CodeQL (C#), `dotnet list package --vulnerable --include-transitive`, Dependabot, secret scanning |
 | UX / UI | FlaUI-based smoke test of main workflows; manual UX checklist per release (§6.5) |
 | Artifacts | Publish self-contained single-file `.exe` for CLI and UI as build artifacts |
+
+### 3.5 Claude configuration
+Claude Code is the development tool for this project. Its configuration is part of the repository, so every session works the same way. These requirements cover the development process, not the shipped application.
+
+- **DEV-01** The repository shall contain the configuration, under version control:
+  - `CLAUDE.md` – build and test commands, coding conventions, commit rules (§3.1, §3.2) and the definition of done (DEV-05). It refers to this specification instead of repeating it.
+  - `.claude/agents/` – the agents in DEV-02.
+  - `.claude/skills/` – the skills in DEV-03.
+  - `.claude/settings.json` – permissions: `dotnet build`, `test`, `format` and read-only `git` and `gh` commands run without a prompt; `git push --force` and `git reset --hard` are denied.
+- **DEV-02** The following agents shall exist, each with its effort level set in its definition:
+
+| Agent | Purpose | Effort | Can change files |
+|---|---|---|---|
+| `developer` | Implements a work package, including its tests | `high` | Yes |
+| `verifier` | Verifies a change independently (DEV-04) | `high`; `xhigh` when `MissingFiles.Core/Copying` changes (NFR-05) | No |
+| `spec-reviewer` | Checks new requirements for ambiguity, conflicts and testability | `high` | No |
+
+- **DEV-03** The following skills shall exist, each with its effort level set in its definition:
+
+| Skill | Purpose | Effort |
+|---|---|---|
+| `/implement-wp <WP>` | Runs the loop in DEV-06 for one work package | `high` |
+| `/verify [<WP>]` | Runs the `verifier` on the current change | `high` |
+| `/release` | Runs the release steps in CM-06 | `medium` |
+| `/ci-status` | Reports the result of the latest CI run for the current commit | `low` |
+
+- **DEV-04** Verification shall be independent of development:
+  - The `verifier` starts in a new context. It receives only the specification, the work package ID and the diff, and not the developer's reasoning or conclusions.
+  - The `verifier` can read files and run the build and tests, but it cannot change files. It reports findings and does not fix them.
+  - The `verifier` builds and runs the tests itself and does not rely on results reported by the developer.
+  - The verdict lists each in-scope requirement ID as pass or fail, with evidence (test name, file and line, or command output), and states whether a test exists for it.
+  - An agent shall not verify its own work. A fix for a finding is verified again by a new `verifier` run.
+- **DEV-05** Definition of done: the checks in §3.2 pass, the `verifier` verdict is PASS, and the commit message ends with the line `Verified: PASS`. A verified change is committed and pushed (§3.1), after which CI (§3.4) is the final gate.
+- **DEV-06** The development loop is implement → verify → fix. It shall stop after 3 verification rounds without PASS and report the remaining findings to the user instead of continuing. Each loop handles one work package.
+
+### 3.6 Configuration management
+- **CM-01** The revision of the application shall have four numbers, `XX.YY.ZZ.BB`, written in decimal without leading zeros (e.g. `1.0.0.123`). Each number shall be between 0 and 65534 (the Windows file version limit).
+
+| Number | Name | Starts at | Increases when | Examples | Resets |
+|---|---|---|---|---|---|
+| `XX` | Main revision | 1 | The application changes substantially | New scan result schema version that older versions cannot read; redesigned workflow | `YY` and `ZZ` to 0 |
+| `YY` | Major revision | 0 | Major features or requirements are added | Name + content matching mode | `ZZ` to 0 |
+| `ZZ` | Minor revision | 0 | Minor features are added or defects are fixed | Defect fix; new option on an existing command | – |
+| `BB` | Build number | Next CI run number | Every CI build (automatic) | – | Never |
+
+- **CM-02** `XX.YY.ZZ` shall be defined in one place, `Directory.Build.props`, and changed by hand. `BB` shall be the `GITHUB_RUN_NUMBER` of the CI workflow (`ci.yml`). Local builds use `BB` = 0, so they cannot be mistaken for a CI build.
+- **CM-03** Revision `1.0.0` shall be kept until the first release. After that, `XX`, `YY` and `ZZ` describe the next release, and each is increased at most once between two releases. Changes that only affect documentation, tests or CI do not increase them.
+- **CM-04** The full revision shall be used everywhere the application reports a version: About (REQ-36), `--version` (REQ-38), the `application` field in the scan result file (REQ-19), the copy log header (REQ-32), and the file version in the properties of both executables.
+- **CM-05** All executables and assemblies from one build shall have the same revision.
+- **CM-06** A release shall be built by CI from a commit with a passing CI run. It shall be tagged `vXX.YY.ZZ.BB` and published to GitHub Releases as `MissingFiles-XX.YY.ZZ.BB-win-x64.zip` (NFR-10).
 
 ---
 
@@ -170,7 +223,7 @@ The application works with **any file type**. Which types are compared is define
 ```json
 {
   "schemaVersion": 1,
-  "application": "MissingFiles 1.0.0",
+  "application": "MissingFiles 1.0.0.123",
   "scanStarted": "2026-09-27T14:03:12+02:00",
   "scanFinished": "2026-09-27T14:04:40+02:00",
   "sourceRoot": "D:\\CameraBackup",
@@ -229,12 +282,27 @@ The application works with **any file type**. Which types are compared is define
 ```
 MissingFiles scan --source <path> --dest <path> [--out <folder>] [--types-file <file.json>] [--groups Pictures,Videos]
 MissingFiles copy --result <file.json> [--out <folder>] [--dry-run]
-MissingFiles --help | --version
+MissingFiles --help | --version | --about
 ```
 
 - **REQ-33a** Without `--types-file`, the CLI uses `%APPDATA%\MissingFiles\FileTypes.json` (or the built-in default if that does not exist; the CLI does not create the file). `--groups` overrides which groups are enabled; unknown group names are an error (exit code 3).
 - **REQ-34** The CLI shall print progress and a final summary to stdout, errors to stderr, and support Ctrl+C for cancellation.
 - **REQ-35** Exit codes: `0` success, no missing files / all copied · `1` success, missing files found / some files skipped · `2` completed with file errors (folders not readable / files not copied) · `3` invalid arguments, or input that prevents starting (missing or overlapping folders, invalid file types or scan result file, not enough free space) · `4` cancelled · `5` fatal error.
+
+### 4.10 About information
+- **REQ-36** The UI and the CLI shall show the following information:
+
+| Item | Value |
+|---|---|
+| Application name | MissingFiles |
+| Revision | Full revision, `XX.YY.ZZ.BB` (CM-01) |
+| Author | Martin Strand |
+| Copyright | Copyright © 2026 Martin Strand |
+| License | The statement “Free to use.”, followed by the full MIT license text |
+
+- **REQ-37** The main window shall have an “About” button that opens a modal About dialog with the information in REQ-36. The text can be selected and copied. The dialog closes with the “Close” button or Esc.
+- **REQ-38** `--about` shall print the information in REQ-36 to stdout and exit with code `0`. `--version` shall print only `MissingFiles XX.YY.ZZ.BB`. `--help` shall list both options.
+- **REQ-39** The information shall come from `MissingFiles.Core`, so the UI and CLI show identical values. The license text shall be embedded in the executables, so it is available offline (NFR-12) and without the zip.
 
 ---
 
@@ -285,11 +353,15 @@ Each test case defines the folder content **and the expected result** (counts an
 ### 5.5 Round-trip test
 - **FT-08** For each test case: scan → copy → scan again. The second scan shall report missing = 0 (except files that failed or were skipped by design, e.g. TC-15).
 
-### 5.7 Performance test
+### 5.6 Performance test
 - **FT-10** Generate a synthetic tree of 1,000,000 zero-byte files (source) and 1,000,000 (destination) and verify NFR-01…NFR-03. Runs nightly/manually, not on every push.
 
-### 5.6 CLI tests
+### 5.7 CLI tests
 - **FT-09** Verify arguments, `--help`, and exit codes (REQ-35).
+
+### 5.8 About and revision tests
+- **FT-11** Verify that the About dialog and `--about` show the same name, revision, author, copyright and license text (REQ-36…REQ-39), that `--about` exits with code `0`, and that Esc closes the dialog.
+- **FT-12** Build with a given build number and verify that the same four-part revision appears in `--version`, `--about`, the scan result file, the copy log header and the file version of both executables (CM-01, CM-04, CM-05).
 
 ---
 
@@ -319,7 +391,7 @@ Reference machine: 8 GB RAM, internal NVMe SSD or external USB 3 HDD.
 - **NFR-09** Supports high-DPI displays (per-monitor DPI aware).
 
 ### 6.4 Deployment
-- **NFR-10** Distributed as self-contained single-file x64 executables (`MissingFiles.exe` for the UI, `MissingFiles.Cli.exe` for the CLI; no separate .NET install needed, no installer). Published as a zip on GitHub Releases, together with `FileTypes.default.json`.
+- **NFR-10** Distributed as self-contained single-file x64 executables (`MissingFiles.exe` for the UI, `MissingFiles.Cli.exe` for the CLI; no separate .NET install needed, no installer). Published as a zip on GitHub Releases, together with `FileTypes.default.json` and `LICENSE`. The zip is named as specified in CM-06.
 - **NFR-10a** The executables are not code-signed in v1. Windows SmartScreen will show an “unrecognised app” warning on first start; the README shall explain this (“More info → Run anyway”).
 - **NFR-11** No administrator rights required.
 - **NFR-12** No network access, no telemetry.
@@ -345,5 +417,12 @@ Reference machine: 8 GB RAM, internal NVMe SSD or external USB 3 HDD.
 | 2026-09-27 | Result view lists the missing files | REQ-21 |
 | 2026-09-27 | Language: English only | NFR-07 |
 | 2026-09-27 | Distribution: single .exe in a zip, no installer, no code signing | NFR-10 |
+| 2026-11-01 | Claude configuration is kept in the repository; verification is independent of development | §3.5 |
+| 2026-11-01 | Four-part revision `XX.YY.ZZ.BB` | §3.6 |
+| 2026-11-01 | About information in both UI and CLI; the application is free to use | §4.10 |
+| 2026-11-01 | License: MIT, with a `LICENSE` file in the repository | REQ-36, NFR-10 |
+| 2026-11-01 | Revision stays `1.0.0` until the first release | CM-03 |
+| 2026-11-01 | Verification is done before committing to `main`, no pull requests | DEV-05 |
+| 2026-11-01 | The Claude loop is implement → verify → fix only, no recurring scheduled tasks | DEV-06 |
 
 No open decisions.
