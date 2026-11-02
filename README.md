@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration). Next: WP10 (configuration management: four-part revision).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration), WP10 (configuration management: four-part revision). Next: WP11 (About information, `LICENSE` file).
 
 ## Desktop app
 
@@ -105,6 +105,19 @@ Build single-file executables:
 dotnet publish src/MissingFiles.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 dotnet publish src/MissingFiles.Cli -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish
 ```
+
+## Revision
+
+The revision has four numbers, `XX.YY.ZZ.BB` (for example `1.0.0.123`), each from 0 to 65534 and without leading zeros.
+A build with any other revision stops with an error. The same revision is used in all output, and for the assembly,
+file and product version of the executables and assemblies. The manifests embedded in the executables have no
+version of their own, so `assemblyIdentity` is left out of both `app.manifest` files.
+
+`XX.YY.ZZ` is changed by hand in `Directory.Build.props`, and stays `1.0.0` until the first release (§3.6 of the
+specification). `BB` is automatic: `ci.yml` sets the variable `MissingFilesBuildNumber` to its run number, which all
+its builds use. Every other build, local or in another workflow, uses 0, so it cannot be mistaken for a CI build.
+
+`dotnet test` checks this with a real build of a copy of the sources in the temp folder.
 
 ## Project structure
 

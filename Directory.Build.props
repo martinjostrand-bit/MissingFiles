@@ -7,9 +7,25 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Version>0.1.0</Version>
     <Authors>Martin Strand</Authors>
     <Product>MissingFiles</Product>
     <Copyright>Copyright (c) Martin Strand</Copyright>
   </PropertyGroup>
+
+  <!-- Revision XX.YY.ZZ.BB (CM-01). XX.YY.ZZ is changed by hand, here and nowhere else (CM-02, CM-03). -->
+  <PropertyGroup>
+    <!-- BB: ci.yml sets this variable to its run number, and a local build uses 0 (CM-02). -->
+    <MissingFilesBuildNumber Condition="'$(MissingFilesBuildNumber)' == ''">0</MissingFilesBuildNumber>
+    <Version>1.0.0.$(MissingFilesBuildNumber)</Version>
+    <!-- The SDK derives the assembly, file and product version from Version (CM-05). Keep the commit hash out of it. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- 0 to 65534 without leading zeros. -->
+    <RevisionNumberPattern>(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4])</RevisionNumberPattern>
+  </PropertyGroup>
+
+  <!-- The compiler accepts leading zeros, and its error for a number out of range does not say what is wrong. -->
+  <Target Name="CheckRevision" BeforeTargets="BeforeBuild">
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(Version)', '^($(RevisionNumberPattern)\.){3}$(RevisionNumberPattern)$'))"
+           Text="Revision '$(Version)' is not valid. It needs four numbers, XX.YY.ZZ.BB, each from 0 to 65534 and without leading zeros (CM-01)." />
+  </Target>
 </Project>

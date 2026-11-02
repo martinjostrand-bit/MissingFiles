@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 
 using MissingFiles.Cli;
@@ -117,6 +118,94 @@ internal static class Cli
     /// <summary>Runs <c>scan</c> on the test folder's source and destination.</summary>
     public static CliRun Scan(TestFolder folder, params string[] extraArgs) =>
         Run(folder, ["scan", "--source", folder.Source, "--dest", folder.Destination, .. extraArgs]);
+}
+
+/// <summary>The root of the repository the tests were built from.</summary>
+internal static class Repository
+{
+    public static string Root { get; } = FindRoot();
+
+    private static string FindRoot()
+    {
+        for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder is not null; folder = folder.Parent)
+        {
+            if (File.Exists(Path.Join(folder.FullName, "MissingFiles.slnx")))
+            {
+                return folder.FullName;
+            }
+        }
+
+        throw new InvalidOperationException($"No repository root above {AppContext.BaseDirectory}.");
+    }
+}
+
+/// <summary>Exit code and output (stdout, then stderr) of a process.</summary>
+internal sealed record CommandResult(int ExitCode, string Output)
+{
+    private static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
+
+    /// <summary>Runs a program and waits for it. A null value in <paramref name="environment"/> removes the variable.</summary>
+    public static CommandResult Run(
+        string program,
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        IReadOnlyDictionary<string, string?>? environment = null)
+    {
+        var start = new ProcessStartInfo(program)
+        {
+            WorkingDirectory = workingDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        foreach (var (name, value) in environment ?? new Dictionary<string, string?>())
+        {
+            if (value is null)
+            {
+                start.Environment.Remove(name);
+            }
+            else
+            {
+                start.Environment[name] = value;
+            }
+        }
+
+        using var process = Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var error = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(Timeout))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException($"{program} did not end within {Timeout}.");
+        }
+
+        return new CommandResult(process.ExitCode, output.GetAwaiter().GetResult() + error.GetAwaiter().GetResult());
+    }
+}
+
+/// <summary>Runs the dotnet command line.</summary>
+internal static class Dotnet
+{
+    /// <summary>Runs dotnet without build servers, which would outlive the command and keep its output open.</summary>
+    public static CommandResult Run(
+        string workingDirectory,
+        IEnumerable<string> arguments,
+        IReadOnlyDictionary<string, string?>? environment = null)
+    {
+        var variables = new Dictionary<string, string?>(environment ?? new Dictionary<string, string?>())
+        {
+            ["MSBUILDDISABLENODEREUSE"] = "1",
+            ["UseSharedCompilation"] = "false",
+        };
+
+        return CommandResult.Run("dotnet", workingDirectory, arguments, variables);
+    }
 }
 
 /// <summary>Captures output and passes each piece to an observer, e.g. to cancel at a certain point.</summary>

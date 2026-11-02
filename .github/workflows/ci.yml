@@ -11,6 +11,9 @@ permissions:
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # BB of the revision (CM-02): GITHUB_RUN_NUMBER of this workflow, for every build and publish below.
+  # Directory.Build.props reads it. Set here only, so builds in other workflows do not use their own run number.
+  MissingFilesBuildNumber: ${{ github.run_number }}
 
 jobs:
   build:
