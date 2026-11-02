@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test). Next: WP7 (full pipeline: static analysis, security scanning, UI smoke tests).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP9 (Claude configuration). Next: WP7 (full pipeline: static analysis, security scanning, UI smoke tests).
 
 ## Desktop app
 

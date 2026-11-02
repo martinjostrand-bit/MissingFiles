@@ -1,6 +1,6 @@
 # MissingFiles – Project Specification
 
-Version: 0.4 · Date: 2026-11-01 · Author: Martin Strand
+Version: 0.5 · Date: 2026-11-01 · Author: Martin Strand
 
 All open decisions are resolved (see §7).
 
@@ -99,7 +99,7 @@ Claude Code is the development tool for this project. Its configuration is part 
   - `.claude/agents/` – the agents in DEV-02.
   - `.claude/skills/` – the skills in DEV-03.
   - `.claude/settings.json` – permissions: `dotnet build`, `test`, `format` and read-only `git` and `gh` commands run without a prompt; `git push --force` and `git reset --hard` are denied.
-- **DEV-02** The following agents shall exist, each with its effort level set in its definition:
+- **DEV-02** The following agents shall exist, each with its default effort level set in its definition. `/verify` raises the `verifier` to `xhigh` when needed:
 
 | Agent | Purpose | Effort | Can change files |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Claude Code is the development tool for this project. Its configuration is part 
   - The `verifier` builds and runs the tests itself and does not rely on results reported by the developer.
   - The verdict lists each in-scope requirement ID as pass or fail, with evidence (test name, file and line, or command output), and states whether a test exists for it.
   - An agent shall not verify its own work. A fix for a finding is verified again by a new `verifier` run.
-- **DEV-05** Definition of done: the checks in §3.2 pass, the `verifier` verdict is PASS, and the commit message ends with the line `Verified: PASS`. A verified change is committed and pushed (§3.1), after which CI (§3.4) is the final gate.
+- **DEV-05** Definition of done: the checks in §3.2 pass, the `verifier` verdict is PASS, and the commit message includes the trailer `Verified: PASS`. A verified change is committed and pushed (§3.1), after which CI (§3.4) is the final gate.
 - **DEV-06** The development loop is implement → verify → fix. It shall stop after 3 verification rounds without PASS and report the remaining findings to the user instead of continuing. Each loop handles one work package.
 
 ### 3.6 Configuration management
@@ -424,5 +424,7 @@ Reference machine: 8 GB RAM, internal NVMe SSD or external USB 3 HDD.
 | 2026-11-01 | Revision stays `1.0.0` until the first release | CM-03 |
 | 2026-11-01 | Verification is done before committing to `main`, no pull requests | DEV-05 |
 | 2026-11-01 | The Claude loop is implement → verify → fix only, no recurring scheduled tasks | DEV-06 |
+| 2026-11-01 | `Verified: PASS` is a commit trailer, not the last line, so attribution trailers can follow it | DEV-05 |
+| 2026-11-01 | The `verifier` default effort is in its definition; `/verify` sets `xhigh` for copy engine changes | DEV-02 |
 
 No open decisions.
