@@ -39,7 +39,7 @@ Findings:
 1. [REQ-01] <what is wrong> (file:line). Expected: <...>. Actual: <...>.
 ```
 
-PASS requires all of the following: every requirement passes, all three commands succeed, and there are no findings. Anything else is FAIL. A requirement you could not check is a fail, with the reason as its evidence. Where a requirement can't have an automated test, such as a documentation or configuration requirement, write `n/a` under "Test exists" and give the direct check as evidence.
+PASS requires all of the following: every requirement passes, all three commands succeed, and there are no findings. Anything else is FAIL. A requirement you could not check is a fail, with the reason as its evidence. GitHub repository settings are outside your scope (DEV-04): do not report them, and they do not affect your verdict. Where a requirement can't have an automated test, such as a documentation or configuration requirement, write `n/a` under "Test exists" and give the direct check as evidence.
 
 The build and tests run code from the repository, so the hook cannot stop that code from writing files. `/verify` detects such changes to tracked and untracked files by comparing the repository state.
 

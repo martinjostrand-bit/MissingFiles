@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -32,7 +31,7 @@ jobs:
       - name: Build (warnings as errors, .NET analyzers)
         run: dotnet build -c Release --no-restore
 
-      - name: Unit and functional tests
+      - name: Unit, functional and UI smoke tests
         run: dotnet test -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults --logger trx
 
       - name: Check line coverage of MissingFiles.Core (>= 80 %)
@@ -52,7 +51,9 @@ jobs:
         shell: pwsh
         run: |
           $output = dotnet list package --vulnerable --include-transitive 2>&1 | Out-String
+          $exitCode = $LASTEXITCODE
           Write-Output $output
+          if ($exitCode -ne 0) { Write-Error 'The check for vulnerable packages did not run'; exit 1 }
           if ($output -match 'has the following vulnerable packages') { exit 1 }
 
       - name: Upload test results
@@ -68,13 +69,16 @@ jobs:
           $common = @('-c', 'Release', '-r', 'win-x64', '--self-contained', 'true',
                       '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true',
                       '-p:EnableCompressionInSingleFile=true', '-p:DebugType=none', '-o', 'publish')
-          dotnet publish src/MissingFiles.App @common
-          dotnet publish src/MissingFiles.Cli @common
+          foreach ($project in 'src/MissingFiles.App', 'src/MissingFiles.Cli') {
+            dotnet publish $project @common
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
       - name: Upload executables
         uses: actions/upload-artifact@v7
         with:
           name: MissingFiles-win-x64
+          if-no-files-found: error
           path: |
             publish/*.exe
             publish/FileTypes.default.json

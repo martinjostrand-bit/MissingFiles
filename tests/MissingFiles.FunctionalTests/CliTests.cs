@@ -13,6 +13,31 @@ public sealed class CliTests : IDisposable
     public void Dispose() => _folder.Dispose();
 
     [Fact]
+    public void DataFolderVariableOfTheDesktopAppIsIgnored() // REQ-04a
+    {
+        // Run as its own process, to have the variable. A CLI that read this file would exit with code 3.
+        var fileTypes = _folder.WriteFile(@"data\FileTypes.json", "{ not json");
+        var start = new ProcessStartInfo("dotnet")
+        {
+            ArgumentList =
+            {
+                Path.Join(AppContext.BaseDirectory, "MissingFiles.Cli.dll"),
+                "scan", "--source", _folder.Source, "--dest", _folder.Destination, "--out", _folder.Output,
+            },
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+        };
+        start.Environment["MISSINGFILES_DATA_FOLDER"] = Path.GetDirectoryName(fileTypes);
+
+        using var process = Process.Start(start)!;
+        process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+
+        Assert.Equal((int)ExitCode.Success, process.ExitCode);
+        Assert.Equal(fileTypes, Assert.Single(Directory.GetFiles(Path.GetDirectoryName(fileTypes)!)));
+    }
+
+    [Fact]
     public void VersionPrintsDisplayNameAndSucceeds()
     {
         var run = Cli.Run(_folder, ["--version"]);

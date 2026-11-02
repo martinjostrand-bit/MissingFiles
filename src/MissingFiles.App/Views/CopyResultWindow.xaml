@@ -42,25 +42,32 @@
                        AutomationProperties.AutomationId="CopyHeadline" />
             <WrapPanel AutomationProperties.Name="Copy summary">
                 <TextBlock Text="Copied:" Style="{StaticResource SummaryLabel}" />
+                <!-- The automation names include the value, as a name replaces the text for screen readers. -->
                 <TextBlock Text="{Binding Summary.Copied, StringFormat=N0}" Style="{StaticResource SummaryValue}"
-                           AutomationProperties.AutomationId="CopyCopied" AutomationProperties.Name="Copied" />
+                           AutomationProperties.AutomationId="CopyCopied"
+                           AutomationProperties.Name="{Binding Summary.Copied, StringFormat='Copied: {0:N0}'}" />
                 <TextBlock Text="Skipped - exists:" Style="{StaticResource SummaryLabel}" />
                 <TextBlock Text="{Binding Summary.SkippedExists, StringFormat=N0}" Style="{StaticResource SummaryValue}"
-                           AutomationProperties.AutomationId="CopySkippedExists" AutomationProperties.Name="Skipped, exists" />
+                           AutomationProperties.AutomationId="CopySkippedExists"
+                           AutomationProperties.Name="{Binding Summary.SkippedExists, StringFormat='Skipped, exists: {0:N0}'}" />
                 <TextBlock Text="Skipped - source changed:" Style="{StaticResource SummaryLabel}" />
                 <TextBlock Text="{Binding Summary.SkippedSourceChanged, StringFormat=N0}" Style="{StaticResource SummaryValue}"
-                           AutomationProperties.AutomationId="CopySkippedChanged" AutomationProperties.Name="Skipped, source changed" />
+                           AutomationProperties.AutomationId="CopySkippedChanged"
+                           AutomationProperties.Name="{Binding Summary.SkippedSourceChanged, StringFormat='Skipped, source changed: {0:N0}'}" />
                 <TextBlock Text="Failed:" Style="{StaticResource SummaryLabel}" />
                 <TextBlock Text="{Binding Summary.Failed, StringFormat=N0}" Style="{StaticResource SummaryValue}"
-                           AutomationProperties.AutomationId="CopyFailed" AutomationProperties.Name="Failed" />
+                           AutomationProperties.AutomationId="CopyFailed"
+                           AutomationProperties.Name="{Binding Summary.Failed, StringFormat='Failed: {0:N0}'}" />
                 <StackPanel Orientation="Horizontal" Visibility="{Binding HasNotProcessed, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Not processed:" Style="{StaticResource SummaryLabel}" />
                     <TextBlock Text="{Binding Summary.NotProcessed, StringFormat=N0}" Style="{StaticResource SummaryValue}"
-                               AutomationProperties.AutomationId="CopyNotProcessed" AutomationProperties.Name="Not processed" />
+                               AutomationProperties.AutomationId="CopyNotProcessed"
+                               AutomationProperties.Name="{Binding Summary.NotProcessed, StringFormat='Not processed: {0:N0}'}" />
                 </StackPanel>
                 <TextBlock Text="Data copied:" Style="{StaticResource SummaryLabel}" />
                 <TextBlock Text="{Binding BytesCopiedText}" Style="{StaticResource SummaryValue}"
-                           AutomationProperties.AutomationId="CopyBytes" AutomationProperties.Name="Data copied" />
+                           AutomationProperties.AutomationId="CopyBytes"
+                           AutomationProperties.Name="{Binding BytesCopiedText, StringFormat='Data copied: {0}'}" />
             </WrapPanel>
 
             <DockPanel Margin="0,4,0,0">

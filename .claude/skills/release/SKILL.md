@@ -11,6 +11,13 @@ Publish a release according to CM-06 and NFR-10. A release is public, so get the
    - The current branch is `main`, the working tree is clean, and `HEAD` matches `origin/main`.
    - The CI workflow in `.github/workflows/ci.yml` sets `BB` from `GITHUB_RUN_NUMBER` (WP10), and `LICENSE` exists (WP11).
    - The UX checklist in §6.5 has been done for this release. Ask the user.
+   - Secret scanning and push protection are enabled (DEV-07). Using the account in §3.1, run both commands. Stop unless each prints exactly `enabled`; any other output, including empty output or `null`, stops the release:
+
+     ```bash
+     gh api repos/martinjostrand-bit/MissingFiles --jq .security_and_analysis.secret_scanning.status
+     gh api repos/martinjostrand-bit/MissingFiles --jq .security_and_analysis.secret_scanning_push_protection.status
+     ```
+
 2. Find the CI run for `HEAD`, and stop unless it succeeded:
 
    ```bash

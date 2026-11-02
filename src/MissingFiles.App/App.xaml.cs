@@ -14,7 +14,21 @@ public partial class App : Application
         base.OnStartup(e);
         DispatcherUnhandledException += OnUnhandledException;
 
-        var viewModel = new MainViewModel(new WpfDialogService(), new JsonSettingsStore(JsonSettingsStore.DefaultPath), new ShellService());
+        // Checked first: with an invalid data folder, no settings are read or written (REQ-04a).
+        var value = Environment.GetEnvironmentVariable(AppDataFolder.VariableName);
+        if (!AppDataFolder.TryResolve(value, out var dataFolder))
+        {
+            MessageBox.Show(
+                $"MissingFiles cannot start, because the data folder is not a full path to a folder: {value}\n\nUse a full path, such as C:\\MissingFilesData, and start again.",
+                "MissingFiles",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
+
+        var settings = new JsonSettingsStore(AppDataFolder.SettingsPath(dataFolder));
+        var viewModel = new MainViewModel(new WpfDialogService(), settings, new ShellService(), userFileTypesPath: AppDataFolder.UserFileTypesPath(dataFolder));
         var window = new MainWindow { DataContext = viewModel };
         MainWindow = window;
         viewModel.Initialize();

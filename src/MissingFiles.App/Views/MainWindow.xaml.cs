@@ -19,6 +19,25 @@ public partial class MainWindow : Window
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
+    /// <summary>
+    /// Lets the list of missing files fill the rest of the window. In a small window it keeps
+    /// its minimum height and the page scrolls instead.
+    /// </summary>
+    private void Page_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        // The event also bubbles up from the scroll bars inside the list.
+        if (e.OriginalSource != Page || !MissingFilesGrid.IsVisible)
+        {
+            return;
+        }
+
+        var top = MissingFilesGrid.TranslatePoint(default, PageContent).Y;
+        var available = Page.ViewportHeight - top - PageContent.Margin.Top - PageContent.Margin.Bottom;
+
+        // Rounded down, so that rounding in the layout cannot bring up the scroll bar.
+        MissingFilesGrid.Height = Math.Floor(Math.Max(MissingFilesGrid.MinHeight, available));
+    }
+
     /// <summary>Lets the view model sort the list, which is much faster than WPF sorting for large lists.</summary>
     private void MissingFilesGrid_Sorting(object sender, DataGridSortingEventArgs e)
     {

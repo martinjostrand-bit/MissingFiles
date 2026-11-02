@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP9 (Claude configuration). Next: WP7 (full pipeline: static analysis, security scanning, UI smoke tests).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration). Next: WP10 (configuration management: four-part revision).
 
 ## Desktop app
 
@@ -68,6 +68,15 @@ dotnet format --verify-no-changes
 a scan of every case TC-01…TC-23 checked against the expected result file, and scan → copy → scan for each.
 The files are generated per test in the temp folder and deleted afterwards.
 
+`tests/MissingFiles.UiTests` runs the smoke tests of the main workflows with [FlaUI](https://github.com/FlaUI/FlaUI):
+it starts the real `MissingFiles.exe`, so `dotnet test` opens windows for about half a minute and needs a desktop
+session. The controls are used through UI Automation, not with the mouse and keyboard.
+
+The tests keep away from your settings with the environment variable `MISSINGFILES_DATA_FOLDER`: the desktop app then
+uses `settings.json` and `FileTypes.json` in that folder, which is created if needed, and not those in
+`%APPDATA%\MissingFiles`. An empty value counts as not set, and any other value that is not an absolute path stops
+the start with an error message. The output folder does not change, and the command line ignores the variable.
+
 The performance test (FT-10, 1,000,000 files per side) is skipped unless enabled. It runs nightly in the
 *Performance* workflow, or locally:
 
@@ -75,6 +84,20 @@ The performance test (FT-10, 1,000,000 files per side) is skipped unless enabled
 $env:MISSINGFILES_PERF = '1'   # optional: MISSINGFILES_PERF_FILES, MISSINGFILES_PERF_MAX_SECONDS, MISSINGFILES_PERF_MAX_MB
 dotnet test tests/MissingFiles.FunctionalTests -c Release --filter Category=Performance
 ```
+
+Every push and pull request runs these on GitHub Actions (`windows-latest`):
+
+| Check | Tooling |
+|---|---|
+| Build | `dotnet build -c Release`, warnings are errors, .NET analyzers (`latest-recommended`) |
+| Tests | `dotnet test`: unit, functional and UI smoke tests, with at least 80 % line coverage on `MissingFiles.Core` |
+| Lint | `dotnet format --verify-no-changes`, `.editorconfig` |
+| Security | CodeQL, `dotnet list package --vulnerable --include-transitive` |
+| Artifacts | Self-contained single-file `MissingFiles.exe` and `MissingFiles.Cli.exe` |
+
+Dependabot keeps the NuGet packages and GitHub Actions up to date. The UX checklist in §6.5 of the specification is
+done by hand for each release. Secret scanning and push protection are GitHub repository settings, not pipeline
+steps; `/release` confirms that both are enabled before publishing (DEV-07).
 
 Build single-file executables:
 
@@ -93,6 +116,7 @@ dotnet publish src/MissingFiles.Cli -c Release -r win-x64 --self-contained -p:Pu
 | `tests/MissingFiles.Core.Tests` | Unit tests of the core library. |
 | `tests/MissingFiles.App.Tests` | Unit tests of the desktop app view models. |
 | `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5), test data generator and performance test. |
+| `tests/MissingFiles.UiTests` | Smoke tests of the main workflows in the real desktop app (FlaUI). |
 
 ## Windows SmartScreen warning
 

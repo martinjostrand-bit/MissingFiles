@@ -1,6 +1,6 @@
 # MissingFiles – Project Specification
 
-Version: 0.5 · Date: 2026-11-01 · Author: Martin Strand
+Version: 0.6 · Date: 2026-11-02 · Author: Martin Strand
 
 All open decisions are resolved (see §7).
 
@@ -69,7 +69,9 @@ Use the GitHub account `martinjostrand-bit` (email: martin.jo.strand@gmail.com) 
   - `MissingFiles.Cli` – console app, thin layer over Core.
   - `MissingFiles.App` – WPF app (MVVM), thin layer over Core.
   - `MissingFiles.Core.Tests` – unit tests (xUnit).
+  - `MissingFiles.App.Tests` – unit tests of the WPF view models (xUnit).
   - `MissingFiles.FunctionalTests` – functional tests (§5).
+  - `MissingFiles.UiTests` – FlaUI smoke tests against the real desktop app (§3.4).
 - Before committing:
   - `dotnet build` succeeds with no errors **and no warnings** (warnings treated as errors in CI).
   - `dotnet test` passes.
@@ -87,9 +89,11 @@ Runs on every push and pull request:
 | Unit tests + coverage | `dotnet test`, Coverlet; target ≥ 80 % line coverage on `MissingFiles.Core` |
 | Functional tests | `MissingFiles.FunctionalTests` (§5) |
 | Static analysis / lint | .NET analyzers (`AnalysisLevel=latest-recommended`), `dotnet format --verify-no-changes`, `.editorconfig` |
-| Security | GitHub CodeQL (C#), `dotnet list package --vulnerable --include-transitive`, Dependabot, secret scanning |
+| Security | GitHub CodeQL (C#), `dotnet list package --vulnerable --include-transitive`, Dependabot |
 | UX / UI | FlaUI-based smoke test of main workflows; manual UX checklist per release (§6.5) |
 | Artifacts | Publish self-contained single-file `.exe` for CLI and UI as build artifacts |
+
+Secret scanning and push protection are GitHub repository settings, not pipeline steps (DEV-07). The UI smoke tests isolate the desktop app's data with `MISSINGFILES_DATA_FOLDER` (REQ-04a).
 
 ### 3.5 Claude configuration
 Claude Code is the development tool for this project. Its configuration is part of the repository, so every session works the same way. These requirements cover the development process, not the shipped application.
@@ -98,7 +102,7 @@ Claude Code is the development tool for this project. Its configuration is part 
   - `CLAUDE.md` – build and test commands, coding conventions, commit rules (§3.1, §3.2) and the definition of done (DEV-05). It refers to this specification instead of repeating it.
   - `.claude/agents/` – the agents in DEV-02.
   - `.claude/skills/` – the skills in DEV-03.
-  - `.claude/settings.json` – permissions: `dotnet build`, `test`, `format` and read-only `git` and `gh` commands run without a prompt; `git push --force` and `git reset --hard` are denied.
+  - `.claude/settings.json` – permissions: `dotnet build`, `test`, `format` and read-only `git` and `gh` commands run without a prompt; `git push --force` and `git reset --hard` are denied. `gh api` is excluded, because it can also write, so it prompts.
 - **DEV-02** The following agents shall exist, each with its default effort level set in its definition. `/verify` raises the `verifier` to `xhigh` when needed:
 
 | Agent | Purpose | Effort | Can change files |
@@ -122,8 +126,14 @@ Claude Code is the development tool for this project. Its configuration is part 
   - The `verifier` builds and runs the tests itself and does not rely on results reported by the developer.
   - The verdict lists each in-scope requirement ID as pass or fail, with evidence (test name, file and line, or command output), and states whether a test exists for it.
   - An agent shall not verify its own work. A fix for a finding is verified again by a new `verifier` run.
+  - The `verifier` cannot run `gh`. GitHub repository settings are outside its scope: it does not report them, and they do not affect its verdict.
 - **DEV-05** Definition of done: the checks in §3.2 pass, the `verifier` verdict is PASS, and the commit message includes the trailer `Verified: PASS`. A verified change is committed and pushed (§3.1), after which CI (§3.4) is the final gate.
 - **DEV-06** The development loop is implement → verify → fix. It shall stop after 3 verification rounds without PASS and report the remaining findings to the user instead of continuing. Each loop handles one work package.
+- **DEV-07** Secret scanning and push protection shall be enabled in the GitHub repository settings. `/release` shall confirm this before publishing, using the account in §3.1:
+  - `gh api repos/martinjostrand-bit/MissingFiles --jq .security_and_analysis.secret_scanning.status`
+  - `gh api repos/martinjostrand-bit/MissingFiles --jq .security_and_analysis.secret_scanning_push_protection.status`
+
+  Each command shall print exactly `enabled`. Any other output, including empty output or `null`, stops the release. This check is not part of the definition of done (DEV-05).
 
 ### 3.6 Configuration management
 - **CM-01** The revision of the application shall have four numbers, `XX.YY.ZZ.BB`, written in decimal without leading zeros (e.g. `1.0.0.123`). Each number shall be between 0 and 65534 (the Windows file version limit).
@@ -152,7 +162,8 @@ Requirements use “shall”. Each has an ID for traceability to tests.
 - **REQ-02** The application shall reject the scan if either folder does not exist, is not accessible, or if one root is the same as or inside the other, with a clear error message.
 - **REQ-03** Both roots shall be scanned recursively, including all subfolders.
 - **REQ-03a** A drive root (e.g. `D:\`) shall be accepted as source or destination. The folders `$Recycle.Bin`, `System Volume Information` and `$WinREAgent` shall always be excluded.
-- **REQ-04** The UI shall remember the last used source, destination, and output folder between sessions.
+- **REQ-04** The UI shall remember the last used source, destination, and output folder between sessions. Settings are stored in `%APPDATA%\MissingFiles\settings.json`, unless REQ-04a applies.
+- **REQ-04a** When the environment variable `MISSINGFILES_DATA_FOLDER` is set, the desktop app shall store `settings.json` in that folder and use `FileTypes.json` in that folder as the user's file types file (REQ-05b), creating the folder if it does not exist. An empty value counts as not set. Any other value that is not an absolute path shall stop the start with an error message, and no settings shall be read or written. The variable is used by the UI smoke tests. It is read by all builds, is not shown in the UI, and is documented only in the developer section of the README. It does not change the output folder (REQ-18). The CLI ignores it.
 
 ### 4.2 File types
 The application works with **any file type**. Which types are compared is defined in a **file types file** (JSON), not hard-coded. Pictures and videos are only the shipped default.
@@ -191,7 +202,7 @@ The application works with **any file type**. Which types are compared is define
   - Unknown properties are ignored (forward compatibility). Comments (`// ...`) and trailing commas are allowed, since the file is edited by hand.
   - A group without `"enabled"` counts as enabled.
   - Invalid extensions are rejected with a message naming the group: wildcards other than a lone `"*"` (e.g. `"*.jpg"`), spaces, path characters, and multi-dot extensions such as `".tar.gz"` (only the part after the last dot is a file's extension).
-- **REQ-05b** The application shall ship with a default file `FileTypes.default.json` (pictures + videos, as above). On first start it is copied to `%APPDATA%\MissingFiles\FileTypes.json`, which the user may edit. The shipped default is never modified.
+- **REQ-05b** The application shall ship with a default file `FileTypes.default.json` (pictures + videos, as above). On first start it is copied to `%APPDATA%\MissingFiles\FileTypes.json` (unless REQ-04a applies), which the user may edit. The shipped default is never modified.
 - **REQ-05c** The user shall be able to choose another file types file (UI: file picker; CLI: `--types-file`). The UI shall remember the last used file.
 - **REQ-05d** The file types file shall be validated before the scan starts. If it is missing, not valid JSON, or has no enabled extensions, the scan shall not start and a message shall name the file and the problem (with line number for JSON errors).
 - **REQ-06** The UI shall show the groups from the file types file as checkboxes (initial state = `enabled`), with the extensions of each group visible, so the user can switch groups on/off for a single scan without editing the file. The UI shall **not** edit or save the file types file; editing is done in a text editor. The UI shall provide an “Open file types file” button (opens it in the default text editor) and a “Reload” button (re-reads and validates it).
@@ -362,6 +373,7 @@ Each test case defines the folder content **and the expected result** (counts an
 ### 5.8 About and revision tests
 - **FT-11** Verify that the About dialog and `--about` show the same name, revision, author, copyright and license text (REQ-36…REQ-39), that `--about` exits with code `0`, and that Esc closes the dialog.
 - **FT-12** Build with a given build number and verify that the same four-part revision appears in `--version`, `--about`, the scan result file, the copy log header and the file version of both executables (CM-01, CM-04, CM-05).
+- **FT-13** With `MISSINGFILES_DATA_FOLDER` set to an empty temporary folder, start and close the desktop app and verify that `settings.json` and `FileTypes.json` exist in that folder and that the files in `%APPDATA%\MissingFiles` are unchanged. Verify that an empty value counts as not set, and that a relative value stops the start with an error message and writes nothing (REQ-04a).
 
 ---
 
@@ -382,7 +394,7 @@ Reference machine: 8 GB RAM, internal NVMe SSD or external USB 3 HDD.
 - **NFR-04** Copy throughput shall be at least 90 % of Windows Explorer copy speed on the same hardware.
 
 ### 6.2 Reliability and data safety
-- **NFR-05** The application shall never delete, move, or overwrite user files.
+- **NFR-05** The application shall never delete, move, or overwrite user files. `settings.json` in the folder named by `MISSINGFILES_DATA_FOLDER` (REQ-04a) is the application's own file, not a user file.
 - **NFR-06** The source is opened read-only in all operations.
 
 ### 6.3 Usability
@@ -426,5 +438,9 @@ Reference machine: 8 GB RAM, internal NVMe SSD or external USB 3 HDD.
 | 2026-11-01 | The Claude loop is implement → verify → fix only, no recurring scheduled tasks | DEV-06 |
 | 2026-11-01 | `Verified: PASS` is a commit trailer, not the last line, so attribution trailers can follow it | DEV-05 |
 | 2026-11-01 | The `verifier` default effort is in its definition; `/verify` sets `xhigh` for copy engine changes | DEV-02 |
+| 2026-11-02 | Secret scanning and push protection are repository settings, not pipeline steps, confirmed with `gh api` by `/release` because the `verifier` cannot run `gh`; not part of the definition of done | DEV-04, DEV-07 |
+| 2026-11-02 | `MISSINGFILES_DATA_FOLDER` is read by all builds of the desktop app, is used by the UI smoke tests, and is not documented for users | REQ-04a |
+| 2026-11-02 | `settings.json` in the `MISSINGFILES_DATA_FOLDER` folder is the application's own file, so overwriting it is allowed | NFR-05 |
+| 2026-11-02 | A `MISSINGFILES_DATA_FOLDER` value that is not an absolute path stops the start, rather than falling back to the default location | REQ-04a |
 
 No open decisions.

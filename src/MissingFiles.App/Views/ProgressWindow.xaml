@@ -23,8 +23,15 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding Label, StringFormat={}{0}:}" />
-                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextAlignment="Right"
-                                   AutomationProperties.Name="{Binding Label}" />
+                        <!-- The automation name includes the value, as a name replaces the text for screen readers. -->
+                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextAlignment="Right">
+                            <AutomationProperties.Name>
+                                <MultiBinding StringFormat="{}{0}: {1}">
+                                    <Binding Path="Label" />
+                                    <Binding Path="Value" />
+                                </MultiBinding>
+                            </AutomationProperties.Name>
+                        </TextBlock>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -37,7 +44,8 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="Elapsed time:" />
             <TextBlock Grid.Column="1" Text="{Binding ElapsedText}" TextAlignment="Right"
-                       AutomationProperties.AutomationId="Elapsed" AutomationProperties.Name="Elapsed time" />
+                       AutomationProperties.AutomationId="Elapsed"
+                       AutomationProperties.Name="{Binding ElapsedText, StringFormat='Elapsed time: {0}'}" />
         </Grid>
 
         <ProgressBar Height="6" Margin="0,16,0,16"
