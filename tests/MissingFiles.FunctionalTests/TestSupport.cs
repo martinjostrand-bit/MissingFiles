@@ -140,6 +140,48 @@ internal static class Repository
     }
 }
 
+/// <summary>
+/// A copy of what is needed to build the application, without bin and obj folders. Tests build the copy,
+/// because a build in the repository would leave their build number and output in its obj folders.
+/// </summary>
+internal static class SourceCopy
+{
+    private static readonly string[] Folders = ["src", "build"];
+
+    private static readonly string[] Files = ["Directory.Build.props", "global.json", ".editorconfig", "LICENSE"];
+
+    public static void Create(string target)
+    {
+        foreach (var folder in Folders)
+        {
+            CopyFolder(Path.Join(Repository.Root, folder), Path.Join(target, folder));
+        }
+
+        foreach (var file in Files)
+        {
+            File.Copy(Path.Join(Repository.Root, file), Path.Join(target, file));
+        }
+    }
+
+    private static void CopyFolder(string source, string target)
+    {
+        Directory.CreateDirectory(target);
+        foreach (var file in Directory.GetFiles(source))
+        {
+            File.Copy(file, Path.Join(target, Path.GetFileName(file)));
+        }
+
+        foreach (var folder in Directory.GetDirectories(source))
+        {
+            var name = Path.GetFileName(folder);
+            if (name is not ("bin" or "obj"))
+            {
+                CopyFolder(folder, Path.Join(target, name));
+            }
+        }
+    }
+}
+
 /// <summary>Exit code and output (stdout, then stderr) of a process.</summary>
 internal sealed record CommandResult(int ExitCode, string Output)
 {

@@ -66,22 +66,17 @@ jobs:
           name: test-results
           path: TestResults
 
-      - name: Publish single-file executables
+      # Self-contained single-file MissingFiles.exe and MissingFiles.Cli.exe, zipped with FileTypes.default.json
+      # and LICENSE as MissingFiles-XX.YY.ZZ.BB-win-x64.zip (NFR-10, CM-06). /release publishes this zip.
+      - name: Build the release zip
         shell: pwsh
-        run: |
-          $common = @('-c', 'Release', '-r', 'win-x64', '--self-contained', 'true',
-                      '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true',
-                      '-p:EnableCompressionInSingleFile=true', '-p:DebugType=none', '-o', 'publish')
-          foreach ($project in 'src/MissingFiles.App', 'src/MissingFiles.Cli') {
-            dotnet publish $project @common
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
+        run: ./build/Package.ps1 -Output artifacts
 
-      - name: Upload executables
+      - name: Upload the release zip
         uses: actions/upload-artifact@v7
         with:
           name: MissingFiles-win-x64
           if-no-files-found: error
-          path: |
-            publish/*.exe
-            publish/FileTypes.default.json
+          # The zip is already compressed.
+          compression-level: 0
+          path: artifacts/MissingFiles-*-win-x64.zip

@@ -196,10 +196,7 @@ public sealed class RevisionBuildTests(RevisionBuild build) : IClassFixture<Revi
         CommandResult.Run(Path.Join(build.Output, "MissingFiles.Cli.exe"), _folder.Root, arguments);
 }
 
-/// <summary>
-/// A copy of the sources built once for all tests. A copy, because a build in the repository
-/// would leave the given build number in its obj folders.
-/// </summary>
+/// <summary>A copy of the sources (<see cref="SourceCopy"/>) built once for all tests.</summary>
 public sealed class RevisionBuild : IDisposable
 {
     /// <summary>The highest number allowed (CM-01), so the compiler and the file version are also used at the limit.</summary>
@@ -211,12 +208,7 @@ public sealed class RevisionBuild : IDisposable
     {
         try
         {
-            CopyFolder(Path.Join(Repository.Root, "src"), Path.Join(_root, "src"));
-            foreach (var file in new[] { "Directory.Build.props", "global.json", ".editorconfig", "LICENSE" })
-            {
-                File.Copy(Path.Join(Repository.Root, file), Path.Join(_root, file));
-            }
-
+            SourceCopy.Create(_root);
             foreach (var project in new[] { @"src\MissingFiles.App", @"src\MissingFiles.Cli" })
             {
                 // The packages are already restored for the repository, so the audit is not needed and no network is used.
@@ -247,24 +239,6 @@ public sealed class RevisionBuild : IDisposable
         if (Directory.Exists(_root))
         {
             Directory.Delete(_root, recursive: true);
-        }
-    }
-
-    private static void CopyFolder(string source, string target)
-    {
-        Directory.CreateDirectory(target);
-        foreach (var file in Directory.GetFiles(source))
-        {
-            File.Copy(file, Path.Join(target, Path.GetFileName(file)));
-        }
-
-        foreach (var folder in Directory.GetDirectories(source))
-        {
-            var name = Path.GetFileName(folder);
-            if (name is not ("bin" or "obj"))
-            {
-                CopyFolder(folder, Path.Join(target, name));
-            }
         }
     }
 }

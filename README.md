@@ -7,9 +7,18 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 - Missing files are written to a JSON result file; a separate copy step copies them to the destination, never overwriting anything.
 - WPF desktop app and a command line interface with the same functions.
 
-See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
+The [user guide](docs/UserGuide.md) explains how to install and use MissingFiles. See
+[MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration), WP10 (configuration management: four-part revision), WP11 (About information, `LICENSE` file). Next: WP8 (packaging, user documentation).
+> Status: all work packages of v1 are done, but no release has been published yet. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP8 (packaging, user documentation), WP9 (Claude configuration), WP10 (configuration management: four-part revision), WP11 (About information, `LICENSE` file).
+
+## Download
+
+Download `MissingFiles-XX.YY.ZZ.BB-win-x64.zip` from [Releases](https://github.com/martinjostrand-bit/MissingFiles/releases)
+and extract it to a folder of your choice. It holds `MissingFiles.exe` (desktop app), `MissingFiles.Cli.exe`
+(command line), `FileTypes.default.json` and `LICENSE`. The executables are self-contained: there is no installer,
+no .NET installation is needed, and they run without administrator rights. On first start Windows may show a
+SmartScreen warning; see [below](#windows-smartscreen-warning).
 
 ## Desktop app
 
@@ -70,7 +79,8 @@ dotnet format --verify-no-changes
 
 `tests/MissingFiles.FunctionalTests` runs the test cases of the specification (§5) through the command line:
 a scan of every case TC-01…TC-23 checked against the expected result file, and scan → copy → scan for each.
-The files are generated per test in the temp folder and deleted afterwards.
+The files are generated per test in the temp folder and deleted afterwards. The functional tests also build the
+release zip with `build/Package.ps1` from a copy of the sources in the temp folder, and check its content.
 
 `tests/MissingFiles.UiTests` runs the smoke tests of the main workflows with [FlaUI](https://github.com/FlaUI/FlaUI):
 it starts the real `MissingFiles.exe`, so `dotnet test` opens windows for about half a minute and needs a desktop
@@ -97,18 +107,23 @@ Every push and pull request runs these on GitHub Actions (`windows-latest`):
 | Tests | `dotnet test`: unit, functional and UI smoke tests, with at least 80 % line coverage on `MissingFiles.Core` |
 | Lint | `dotnet format --verify-no-changes`, `.editorconfig` |
 | Security | CodeQL, `dotnet list package --vulnerable --include-transitive` |
-| Artifacts | Self-contained single-file `MissingFiles.exe` and `MissingFiles.Cli.exe` |
+| Artifacts | The release zip, with self-contained single-file `MissingFiles.exe` and `MissingFiles.Cli.exe` |
 
 Dependabot keeps the NuGet packages and GitHub Actions up to date. The UX checklist in §6.5 of the specification is
 done by hand for each release. Secret scanning and push protection are GitHub repository settings, not pipeline
 steps; `/release` confirms that both are enabled before publishing (DEV-07).
 
-Build single-file executables:
+Build the release zip, as CI does:
 
 ```powershell
-dotnet publish src/MissingFiles.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-dotnet publish src/MissingFiles.Cli -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish
+powershell -NoProfile -ExecutionPolicy Bypass -File build\Package.ps1   # optional: -Output <empty folder>
 ```
+
+The script publishes `MissingFiles.exe` and `MissingFiles.Cli.exe` as self-contained single-file x64 executables,
+and zips them with `FileTypes.default.json` and `LICENSE` as `artifacts\MissingFiles-XX.YY.ZZ.BB-win-x64.zip`. It
+stops without a zip if the output folder is not empty, if a build fails, if the publish output has any other file,
+or if the executables do not have the same revision. `/release` publishes the zip that CI built (§3.6 of the
+specification).
 
 ## Revision
 
@@ -134,6 +149,8 @@ its builds use. Every other build, local or in another workflow, uses 0, so it c
 | `tests/MissingFiles.App.Tests` | Unit tests of the desktop app view models. |
 | `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5), test data generator and performance test. |
 | `tests/MissingFiles.UiTests` | Smoke tests of the main workflows in the real desktop app (FlaUI). |
+| `build/Package.ps1` | Builds the release zip. |
+| `docs/UserGuide.md` | User guide. |
 
 ## License
 
