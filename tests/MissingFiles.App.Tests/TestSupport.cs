@@ -91,6 +91,10 @@ internal sealed class FakeDialogService : IDialogService
 
     public void ShowCopyResult(CopyResultViewModel result) => CopyResultDialogs.Add(result);
 
+    public List<AboutViewModel> AboutDialogs { get; } = [];
+
+    public void ShowAbout(AboutViewModel about) => AboutDialogs.Add(about);
+
     public async Task RunWithProgressAsync(ProgressViewModel progress, Func<Task> work)
     {
         ProgressDialogs.Add(progress);

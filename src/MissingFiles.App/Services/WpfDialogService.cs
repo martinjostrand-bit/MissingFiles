@@ -78,6 +78,9 @@ public sealed class WpfDialogService : IDialogService
     public void ShowCopyResult(CopyResultViewModel result) =>
         new CopyResultWindow { DataContext = result, Owner = Owner }.ShowDialog();
 
+    public void ShowAbout(AboutViewModel about) =>
+        new AboutWindow { DataContext = about, Owner = Owner }.ShowDialog();
+
     private static Window? Owner => Application.Current?.MainWindow;
 }
 

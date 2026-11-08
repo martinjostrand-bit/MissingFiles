@@ -9,7 +9,7 @@ Windows tool that finds files in a **source** folder that are missing from a **d
 
 See [MissingFiles_specification_v2.md](MissingFiles_specification_v2.md) for the full specification.
 
-> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration), WP10 (configuration management: four-part revision). Next: WP11 (About information, `LICENSE` file).
+> Status: early development. Done: WP0 (project skeleton), WP1 (file types, scan, scan result file), WP2 (copy, copy log), WP3 (command line), WP4 (desktop app: scan and result view), WP5 (desktop app: copy), WP6 (functional tests, test data generator, performance test), WP7 (full pipeline: static analysis, security scanning, UI smoke tests), WP9 (Claude configuration), WP10 (configuration management: four-part revision), WP11 (About information, `LICENSE` file). Next: WP8 (packaging, user documentation).
 
 ## Desktop app
 
@@ -24,6 +24,8 @@ lists the counters, the copy log and any files that were not copied; **Last copy
 
 File types come from `%APPDATA%\MissingFiles\FileTypes.json`, created from the built-in default on first start.
 Use **Edit** to open it in a text editor and **Reload** after saving it.
+
+**About** shows the revision, author, copyright and license. The text can be selected and copied.
 
 ## Command line
 
@@ -40,6 +42,8 @@ Result files and copy logs are written to `Documents\MissingFiles` (change with 
 File types come from `%APPDATA%\MissingFiles\FileTypes.json` if it exists, otherwise the built-in
 pictures + videos list; use `--types-file` and `--groups` to choose others.
 Run `MissingFiles.Cli scan --help` or `MissingFiles.Cli copy --help` for all options.
+`MissingFiles.Cli --version` prints the name and revision, and `MissingFiles.Cli --about` also the author,
+copyright and license.
 Press Ctrl+C to cancel.
 
 | Exit code | Meaning |
@@ -130,6 +134,11 @@ its builds use. Every other build, local or in another workflow, uses 0, so it c
 | `tests/MissingFiles.App.Tests` | Unit tests of the desktop app view models. |
 | `tests/MissingFiles.FunctionalTests` | Functional tests (spec §5), test data generator and performance test. |
 | `tests/MissingFiles.UiTests` | Smoke tests of the main workflows in the real desktop app (FlaUI). |
+
+## License
+
+Free to use. MissingFiles is released under the [MIT License](LICENSE). The license text is built into the
+executables, and shown by **About** and `--about`.
 
 ## Windows SmartScreen warning
 

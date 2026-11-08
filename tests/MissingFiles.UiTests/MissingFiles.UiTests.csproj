@@ -4,6 +4,8 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
+    <!-- Required by LibraryImport (PostMessage, to press Esc in a dialog). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- No coverlet.collector: the app runs in its own process, so these tests add no coverage. -->

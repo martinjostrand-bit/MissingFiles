@@ -1,0 +1,26 @@
+<Window x:Class="MissingFiles.App.Views.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MissingFiles.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:AboutViewModel}"
+        Title="{Binding Title}" Width="640" Height="560" MinWidth="420" MinHeight="300"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        FocusManager.FocusedElement="{Binding ElementName=CloseButton}">
+    <!-- About (REQ-36, REQ-37): the text can be selected and copied. Close and Esc close the dialog. -->
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBox IsReadOnly="True" Text="{Binding Text, Mode=OneWay}" TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                 AutomationProperties.AutomationId="AboutText" AutomationProperties.Name="About MissingFiles" />
+
+        <Button x:Name="CloseButton" Grid.Row="1" Content="Close" HorizontalAlignment="Right" MinWidth="100" Margin="0,16,0,0"
+                IsDefault="True" IsCancel="True" AutomationProperties.AutomationId="CloseButton" />
+    </Grid>
+</Window>

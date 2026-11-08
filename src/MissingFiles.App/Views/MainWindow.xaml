@@ -133,8 +133,12 @@
                 </ItemsControl>
             </StackPanel>
 
-            <!-- Actions (REQ-12, REQ-21a) -->
+            <!-- Actions (REQ-12, REQ-21a), About (REQ-37) -->
             <DockPanel Grid.Row="2" Margin="0,20,0,0" LastChildFill="True">
+                <Button DockPanel.Dock="Right" Content="_About" Style="{StaticResource SideButton}"
+                        Command="{Binding ShowAboutCommand}"
+                        ToolTip="Revision, author, copyright and license"
+                        AutomationProperties.AutomationId="About" AutomationProperties.Name="About MissingFiles" />
                 <!-- AccentButtonStyle does not turn "_" into an access key by itself, so AccessText does it. -->
                 <Button DockPanel.Dock="Left" MinWidth="130" IsDefault="True"
                         Style="{DynamicResource AccentButtonStyle}"

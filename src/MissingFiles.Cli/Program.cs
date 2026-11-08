@@ -13,7 +13,12 @@ public static class Program
         Usage:
           MissingFiles.Cli scan --source <folder> --dest <folder> [--out <folder>] [--types-file <file.json>] [--groups <g1,g2>]
           MissingFiles.Cli copy --result <file.json> [--out <folder>] [--dry-run]
-          MissingFiles.Cli --help | --version
+          MissingFiles.Cli --help | --version | --about
+
+        Options:
+          --help      Show this help.
+          --version   Show the name and revision.
+          --about     Show the name, revision, author, copyright and license.
 
         Run 'MissingFiles.Cli scan --help' or 'MissingFiles.Cli copy --help' for details.
         Press Ctrl+C to cancel a running scan or copy.
@@ -65,6 +70,9 @@ public static class Program
                     return ExitCode.Success;
                 case "--version":
                     context.Out.WriteLine(ProductInfo.DisplayName);
+                    return ExitCode.Success;
+                case "--about":
+                    context.Out.WriteLine(ProductInfo.AboutText);
                     return ExitCode.Success;
                 case "scan":
                     return ScanCommand.Run(args.Skip(1).ToList(), context);

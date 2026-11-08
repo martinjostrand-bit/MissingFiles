@@ -1,5 +1,6 @@
 using MissingFiles.App.Services;
 using MissingFiles.App.ViewModels;
+using MissingFiles.Core;
 using MissingFiles.Core.Scanning;
 
 namespace MissingFiles.App.Tests;
@@ -109,6 +110,18 @@ public sealed class MainViewModelTests : IDisposable
         vm.OpenFileTypesFileCommand.Execute(null);
 
         Assert.Equal(_folder.UserFileTypes, Assert.Single(_shell.OpenedInEditor));
+    }
+
+    [Fact]
+    public void AboutShowsTheAboutDialog() // REQ-37
+    {
+        var vm = CreateInitialized();
+
+        Assert.True(vm.ShowAboutCommand.CanExecute(null));
+        vm.ShowAboutCommand.Execute(null);
+
+        Assert.Equal(ProductInfo.AboutText, Assert.Single(_dialogs.AboutDialogs).Text);
+        Assert.Empty(_dialogs.Errors);
     }
 
     [Fact]

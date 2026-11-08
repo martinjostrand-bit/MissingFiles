@@ -24,6 +24,9 @@ public interface IDialogService
 
     /// <summary>Shows the result of a copy in a modal dialog (REQ-31).</summary>
     void ShowCopyResult(CopyResultViewModel result);
+
+    /// <summary>Shows the modal About dialog (REQ-37).</summary>
+    void ShowAbout(AboutViewModel about);
 }
 
 /// <summary>Opens files and folders in other programs; replaced in tests.</summary>

@@ -46,6 +46,35 @@ public sealed class CliTests : IDisposable
         Assert.Contains(ProductInfo.DisplayName, run.Out, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void VersionPrintsOnlyNameAndRevision() // REQ-38
+    {
+        var run = Cli.Run(_folder, ["--version"]);
+
+        Assert.Equal(ExitCode.Success, run.Code);
+        Assert.Equal($"MissingFiles {ProductInfo.Version}{Environment.NewLine}", run.Out);
+        Assert.Empty(run.Error);
+    }
+
+    [Fact]
+    public void AboutPrintsTheAboutInformationAndSucceeds() // REQ-36, REQ-38, REQ-39, FT-11
+    {
+        var run = Cli.Run(_folder, ["--about"]);
+
+        Assert.Equal(ExitCode.Success, run.Code);
+        Assert.Equal(ProductInfo.AboutText + Environment.NewLine, run.Out);
+        Assert.Empty(run.Error);
+
+        var lines = run.Out.Split(Environment.NewLine);
+        Assert.Equal("MissingFiles", lines[0]);
+        Assert.Equal($"Revision: {ProductInfo.Version}", lines[1]);
+        Assert.Equal("Author: Martin Strand", lines[2]);
+        Assert.Equal("Copyright © 2026 Martin Strand", lines[3]);
+        Assert.Equal("License: Free to use.", lines[5]);
+        Assert.Equal("MIT License", lines[7]);
+        Assert.Contains(ProductInfo.LicenseText, run.Out, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("--help")]
     [InlineData("-h")]
@@ -59,6 +88,17 @@ public sealed class CliTests : IDisposable
         Assert.Contains("Usage:", run.Out, StringComparison.Ordinal);
         Assert.Contains("MissingFiles.Cli scan", run.Out, StringComparison.Ordinal);
         Assert.Contains("MissingFiles.Cli copy", run.Out, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("--version")]
+    [InlineData("--about")]
+    public void HelpListsVersionAndAbout(string option) // REQ-38
+    {
+        var run = Cli.Run(_folder, ["--help"]);
+
+        Assert.Contains("--help | --version | --about", run.Out, StringComparison.Ordinal);
+        Assert.Matches($@"(?m)^  {option} +\S", run.Out);
     }
 
     [Theory]

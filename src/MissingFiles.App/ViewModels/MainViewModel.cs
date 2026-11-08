@@ -284,6 +284,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool CanShowLastCopy() => Result?.LastCopy is not null;
 
+    /// <summary>Shows name, revision, author, copyright and license (REQ-37).</summary>
+    [RelayCommand]
+    private void ShowAbout() => _dialogs.ShowAbout(new AboutViewModel());
+
     private bool CanStartScan() =>
         !string.IsNullOrWhiteSpace(SourceFolder) && !string.IsNullOrWhiteSpace(DestinationFolder) && FileTypesError is null;
 

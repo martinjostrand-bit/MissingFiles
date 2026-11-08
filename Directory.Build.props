@@ -9,7 +9,8 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Authors>Martin Strand</Authors>
     <Product>MissingFiles</Product>
-    <Copyright>Copyright (c) Martin Strand</Copyright>
+    <!-- The same as ProductInfo.Copyright, which About shows (REQ-36). -->
+    <Copyright>Copyright &#169; 2026 Martin Strand</Copyright>
   </PropertyGroup>
 
   <!-- Revision XX.YY.ZZ.BB (CM-01). XX.YY.ZZ is changed by hand, here and nowhere else (CM-02, CM-03). -->

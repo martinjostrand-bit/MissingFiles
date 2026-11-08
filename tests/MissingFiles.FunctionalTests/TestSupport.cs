@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 
 using MissingFiles.Cli;
 
@@ -158,6 +159,10 @@ internal sealed record CommandResult(int ExitCode, string Output)
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
+
+            // The CLI writes UTF-8, e.g. the "©" of --about.
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var argument in arguments)
         {

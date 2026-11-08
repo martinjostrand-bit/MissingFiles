@@ -109,7 +109,7 @@ public sealed class RevisionDefinitionTests
     }
 }
 
-/// <summary>A real build with a given build number (spec FT-12, CM-04, CM-05). The <c>--about</c> output comes with WP11.</summary>
+/// <summary>A real build with a given build number (spec FT-12, CM-04, CM-05).</summary>
 public sealed class RevisionBuildTests(RevisionBuild build) : IClassFixture<RevisionBuild>, IDisposable
 {
     private readonly TestFolder _folder = new();
@@ -123,6 +123,19 @@ public sealed class RevisionBuildTests(RevisionBuild build) : IClassFixture<Revi
 
         Assert.Equal((int)ExitCode.Success, result.ExitCode);
         Assert.Equal($"MissingFiles {build.Revision}", result.Output.Trim());
+    }
+
+    [Fact]
+    public void AboutOptionPrintsTheFullRevisionAndTheLicense() // CM-04, REQ-38, REQ-39, FT-11
+    {
+        // Only the build output, without the LICENSE file next to it: the text is embedded in the executable.
+        Assert.Empty(Directory.GetFiles(build.Output, "LICENSE*"));
+
+        var result = RunCli("--about");
+
+        Assert.Equal((int)ExitCode.Success, result.ExitCode);
+        var expected = ProductInfo.AboutText.Replace($"Revision: {ProductInfo.Version}", $"Revision: {build.Revision}", StringComparison.Ordinal);
+        Assert.Equal(expected + Environment.NewLine, result.Output);
     }
 
     [Fact]
@@ -199,7 +212,7 @@ public sealed class RevisionBuild : IDisposable
         try
         {
             CopyFolder(Path.Join(Repository.Root, "src"), Path.Join(_root, "src"));
-            foreach (var file in new[] { "Directory.Build.props", "global.json", ".editorconfig" })
+            foreach (var file in new[] { "Directory.Build.props", "global.json", ".editorconfig", "LICENSE" })
             {
                 File.Copy(Path.Join(Repository.Root, file), Path.Join(_root, file));
             }
